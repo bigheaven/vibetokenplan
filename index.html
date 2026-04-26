@@ -1,0 +1,3387 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="baidu-site-verification" content="codeva-LiaxYnxu2a" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coding Plan 对比工具 - 国内主流AI平台套餐对比</title>
+    <!-- <link rel="icon" href="/favicon.ico?v=260418" type="image/x-icon"> -->
+    <link rel="stylesheet" href="styles/shared.css">
+    <style>
+        .header .models {
+            color: var(--text-tertiary);
+            font-size: 15px;
+            font-weight: 400;
+            line-height: 1.7;
+        }
+
+        /* 顶部筛选栏 */
+        .filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .filter-dropdown {
+            position: relative;
+        }
+
+        .filter-btn {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 10px 16px;
+            border-radius: var(--radius-lg);
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            white-space: nowrap;
+            font-weight: 500;
+            box-shadow: var(--shadow-sm);
+            min-height: 40px;
+        }
+
+        .filter-btn:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--accent-primary);
+            color: var(--text-primary);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .filter-btn.active {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+        }
+
+        .filter-btn .arrow {
+            width: 14px;
+            height: 14px;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 0.5;
+        }
+
+        .filter-btn:hover .arrow {
+            opacity: 0.7;
+        }
+
+        .filter-btn.active .arrow {
+            transform: rotate(180deg);
+            opacity: 1;
+        }
+
+        .filter-btn .arrow svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .filter-btn .count {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            min-width: 20px;
+            text-align: center;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(99, 102, 241, 0.3);
+        }
+
+        /* 下拉菜单 */
+        .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+            min-width: 280px;
+            max-width: 360px;
+            box-shadow: var(--shadow-xl);
+            z-index: 1000;
+            display: none;
+            animation: dropdownFade 0.2s ease-out;
+        }
+
+        @keyframes dropdownFade {
+            from {
+                opacity: 0;
+                transform: translateY(-8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 小屏 fixed 居中：keyframes 必须带 translate(-50%,-50%)，否则会覆盖居中并在动画结束后才归位 */
+        @keyframes dropdownFadeCenter {
+            from {
+                opacity: 0;
+                transform: translate(-50%, calc(-50% - 8px));
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%);
+            }
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .dropdown-section {
+            margin-bottom: 16px;
+        }
+
+        .dropdown-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .dropdown-title {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            margin-bottom: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            max-height: 240px;
+            overflow-y: auto;
+        }
+
+        .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .radio-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .radio-label:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--accent-primary);
+        }
+
+        .radio-label input[type="radio"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            accent-color: var(--accent-primary);
+        }
+
+        .radio-label span {
+            font-size: 13px;
+            color: var(--text-primary);
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: var(--radius-md);
+            transition: all 0.15s ease;
+        }
+
+        .checkbox-item:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--border-color);
+            border-radius: 5px;
+            background: white;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s;
+        }
+
+        .checkbox-item input[type="checkbox"]:checked {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border-color: transparent;
+        }
+
+        .checkbox-item input[type="checkbox"]:checked::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 6px;
+            height: 10px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: translate(-50%, -60%) rotate(45deg);
+        }
+
+        .checkbox-item label {
+            font-size: 13px;
+            color: var(--text-primary);
+            cursor: pointer;
+            flex: 1;
+            font-weight: 500;
+        }
+
+        .price-inputs {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .price-input {
+            width: 100%;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 10px 14px;
+            border-radius: var(--radius-md);
+            font-size: 13px;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .price-input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .price-separator {
+            color: var(--text-tertiary);
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        /* 双滑块样式 */
+        .price-slider-container {
+            padding: 8px 0;
+        }
+
+        .price-slider {
+            position: relative;
+            height: 24px;
+            margin: 10px 0;
+        }
+
+        .slider-track {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            transform: translateY(-50%);
+        }
+
+        .slider-range {
+            position: absolute;
+            top: 50%;
+            height: 6px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border-radius: 4px;
+            transform: translateY(-50%);
+            pointer-events: none;
+        }
+
+        .slider-thumb {
+            position: absolute;
+            top: 50%;
+            width: 18px;
+            height: 18px;
+            background: white;
+            border: 2px solid #6366f1;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            cursor: grab;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+            z-index: 10;
+        }
+
+        .slider-thumb:hover {
+            transform: translate(-50%, -50%) scale(1.1);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .slider-thumb:active {
+            cursor: grabbing;
+            transform: translate(-50%, -50%) scale(1.1);
+        }
+
+        .slider-values {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 4px;
+        }
+
+        .slider-value {
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .dropdown-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-light);
+        }
+
+        .dropdown-btn {
+            flex: 1;
+            padding: 10px 16px;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+        }
+
+        .dropdown-btn.primary {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        .dropdown-btn.primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+        }
+
+        .dropdown-btn.secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+
+        .dropdown-btn.secondary:hover {
+            background: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        /* 重置按钮 */
+        .reset-btn {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 10px 16px;
+            border-radius: var(--radius-lg);
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+            box-shadow: var(--shadow-sm);
+            min-height: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+        }
+
+        .reset-btn:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border-color: var(--text-tertiary);
+            transform: translateY(-1px);
+        }
+
+        /* 显示已下线套餐复选框 */
+        .filter-checkbox {
+            display: flex;
+            align-items: center;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+            transition: all 0.2s;
+        }
+
+        .checkbox-label:hover {
+            border-color: var(--accent-primary);
+        }
+
+        .checkbox-label input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--accent-primary);
+            cursor: pointer;
+        }
+
+        .checkbox-text {
+            font-size: 14px;
+            color: var(--text-secondary);
+            user-select: none;
+        }
+
+        .checkbox-label:has(input:checked) {
+            border-color: var(--accent-primary);
+            background: var(--accent-primary-bg);
+        }
+
+        .checkbox-label:has(input:checked) .checkbox-text {
+            color: var(--text-primary);
+        }
+
+        /* 统计信息 */
+        .stats-bar {
+            color: var(--text-tertiary);
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            margin-left: auto;
+        }
+
+        .stats-bar strong {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        /* 表格容器 */
+        .table-wrapper {
+            background: var(--bg-secondary);
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .table-scroll {
+            overflow-x: auto;
+            overflow-y: visible;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            min-width: 1200px;
+        }
+
+        thead {
+            background: linear-gradient(135deg, #fafbfc, #f8fafc);
+        }
+
+        th {
+            padding: 16px 18px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 12px;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s;
+            border-bottom: 2px solid var(--border-light);
+            position: relative;
+            z-index: 10;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        th:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        th.sortable::after {
+            content: '';
+            display: inline-block;
+            width: 0;
+            height: 0;
+            margin-left: 8px;
+            vertical-align: middle;
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+            border-top: 4px solid var(--text-tertiary);
+            opacity: 0.4;
+            transition: all 0.2s;
+        }
+
+        th.sort-asc::after {
+            border-top: none;
+            border-bottom: 4px solid var(--accent-primary);
+            opacity: 1;
+        }
+
+        th.sort-desc::after {
+            border-top: 4px solid var(--accent-primary);
+            border-bottom: none;
+            opacity: 1;
+        }
+
+        /* 冻结列样式 */
+        th.sticky-first,
+        th.sticky-second {
+            position: sticky;
+            z-index: 20;
+            background: linear-gradient(135deg, #fafbfc, #f8fafc);
+        }
+
+        th.sticky-first {
+            left: 0;
+            border-right: 2px solid var(--border-color);
+        }
+
+        th.sticky-second {
+            left: 0;
+            border-right: 2px solid var(--border-color);
+        }
+
+        td {
+            padding: 16px 18px;
+            border-bottom: 1px solid var(--border-light);
+            font-size: 13px;
+            white-space: nowrap;
+            color: var(--text-primary);
+            position: relative;
+            transition: background 0.15s ease;
+        }
+
+        tbody tr {
+            transition: all 0.15s ease;
+        }
+
+        tbody tr:hover {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.02), rgba(139, 92, 246, 0.02));
+        }
+
+        tbody tr:hover td {
+            color: var(--text-primary);
+        }
+
+        /* 冻结列的 td */
+        td.sticky-first,
+        td.sticky-second {
+            position: sticky;
+            z-index: 100;
+            background: var(--bg-secondary);
+            transform: translateZ(0);
+            will-change: transform;
+        }
+
+        td.sticky-first {
+            left: 0;
+            border-right: 2px solid var(--border-color);
+        }
+
+        td.sticky-second {
+            left: 0;
+            border-right: 2px solid var(--border-color);
+        }
+
+        tbody tr:hover td.sticky-first,
+        tbody tr:hover td.sticky-second {
+            background: var(--bg-secondary);
+            box-shadow: inset 0 0 0 100px rgba(99, 102, 241, 0.02);
+        }
+
+        /* 平台名称 */
+        .vendor-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        /* 套餐名称 */
+        .plan-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        /* 价格 */
+        .price {
+            color: #00a855;
+            font-weight: 500;
+            font-size: 13px;
+        }
+
+        .price-monthly {
+            color: var(--accent-primary);
+            font-weight: 500;
+            font-size: 13px;
+        }
+
+        .price-normal {
+            color: var(--text-primary);
+            font-weight: 400;
+            font-size: 13px;
+        }
+
+        /* 原始价格（划线） */
+        .price-original {
+            text-decoration: line-through;
+            font-size: 12px;
+            color: var(--text-tertiary);
+            opacity: 0.7;
+            margin-left: 4px;
+            font-weight: 400;
+        }
+
+        /* 跳转按钮 */
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #0099cc;
+            border: 1px solid #0099cc;
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: var(--radius-md);
+            font-weight: 500;
+            font-size: 13px;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .action-btn:hover {
+            background: #0088b8;
+            border-color: #0088b8;
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        .action-btn::after {
+            content: '→';
+            font-size: 14px;
+            transition: transform 0.2s;
+        }
+
+        .action-btn:hover::after {
+            transform: translateX(3px);
+        }
+
+        /* 类型标签 */
+        .type-tag {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+        }
+
+        .type-tag.coding-plan {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(139, 92, 246, 0.12));
+            color: #6366f1;
+            border: 1px solid rgba(99, 102, 241, 0.25);
+        }
+
+        .type-tag.token-plan {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(249, 115, 22, 0.12));
+            color: #d97706;
+            border: 1px solid rgba(245, 158, 11, 0.25);
+        }
+
+        /* 模型标签 */
+        .model-tag {
+            display: inline-block;
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+            font-size: 11px;
+            margin-right: 6px;
+            margin-bottom: 6px;
+            font-weight: 400;
+            border: 1px solid var(--border-color);
+        }
+
+        /* 请求数 */
+        .request-count {
+            color: var(--text-primary);
+            font-weight: 400;
+            font-size: 13px;
+        }
+
+        /* 单位文本 */
+        .unit {
+            color: var(--text-secondary);
+            font-weight: 400;
+            font-size: 11px;
+            margin-left: 4px;
+            margin-right: 2px;
+        }
+
+        /* 其他权益 */
+        .benefit {
+            display: inline-block;
+            background: linear-gradient(135deg, rgba(249, 115, 22, 0.08), rgba(251, 146, 60, 0.08));
+            color: #f97316;
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+            font-size: 11px;
+            margin-right: 6px;
+            margin-bottom: 6px;
+            font-weight: 400;
+            border: 1px solid rgba(249, 115, 22, 0.15);
+        }
+
+        /* 备注 */
+        .note {
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 400;
+            white-space: pre-line;
+            line-height: 1.6;
+        }
+
+        /* 备注列支持换行 */
+        th.note-header,
+        td:has(.note) {
+            white-space: normal !important;
+            min-width: 700px;
+        }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 80px 24px;
+            color: var(--text-tertiary);
+            font-size: 14px;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.4;
+        }
+
+        .empty-state-text {
+            color: var(--text-secondary);
+            font-size: 15px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .empty-state-hint {
+            font-size: 13px;
+            color: var(--text-tertiary);
+        }
+
+        /* 账号出售区域 */
+        .account-sale-section {
+            margin-top: 24px;
+            padding-top: 32px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .account-sale-section h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .account-sale-section .description {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+
+        .account-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .account-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+        }
+
+        .account-card .platform {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .account-card .detail {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
+
+        .account-card .price-tag {
+            display: inline-block;
+            padding: 4px 12px;
+            background: var(--accent-primary);
+            color: white;
+            border-radius: var(--radius-md);
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .contact-section {
+            display: flex;
+            align-items: flex-start;
+            gap: 24px;
+            padding: 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+        }
+
+        .contact-info {
+            flex: 1;
+        }
+
+        .contact-info .label {
+            font-size: 13px;
+            color: var(--text-tertiary);
+            margin-bottom: 4px;
+        }
+
+        .contact-info .wechat-id {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-family: monospace;
+        }
+
+        .contact-qrcode {
+            width: 120px;
+            height: 120px;
+            border-radius: var(--radius-md);
+            object-fit: cover;
+        }
+
+        /* 滚动条美化 */
+        .table-scroll::-webkit-scrollbar {
+            height: 8px;
+            width: 8px;
+        }
+
+        .table-scroll::-webkit-scrollbar-track {
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+        }
+
+        .table-scroll::-webkit-scrollbar-thumb {
+            background: var(--text-tertiary);
+            border-radius: 4px;
+            opacity: 0.6;
+        }
+
+        .table-scroll::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
+            opacity: 0.8;
+        }
+
+        .checkbox-group::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .checkbox-group::-webkit-scrollbar-track {
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+        }
+
+        .checkbox-group::-webkit-scrollbar-thumb {
+            background: var(--text-tertiary);
+            border-radius: 3px;
+            opacity: 0.6;
+        }
+
+        /* 加载动画 */
+        .loading {
+            text-align: center;
+            padding: 80px 24px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .loading::after {
+            content: '...';
+            animation: dots 1.5s steps(4, end) infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+
+        /* 平台推荐模块 */
+        .recommendations {
+            margin-bottom: 32px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        /* 表格行 - 已下线样式 */
+        .plan-row.discontinued {
+            background-color: var(--bg-tertiary) !important;
+            opacity: 0.7;
+        }
+
+        .plan-row.discontinued .vendor-name,
+        .plan-row.discontinued .plan-name,
+        .plan-row.discontinued .model-tag,
+        .plan-row.discontinued .benefit {
+            color: var(--text-tertiary);
+        }
+
+        .status-offline {
+            display: inline-block;
+            padding: 2px 8px;
+            background-color: var(--text-tertiary);
+            color: var(--bg-primary);
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .recommendation-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            padding: 24px;
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .recommendation-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+            border-color: rgba(99, 102, 241, 0.3);
+        }
+
+        .recommendation-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .rec-logo {
+            width: 28px;
+            height: 28px;
+            margin-right: 6px;
+            border-radius: 6px;
+            flex-shrink: 0;
+        }
+
+        .recommendation-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .recommendation-name-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+
+        .recommendation-name-link:hover {
+            color: var(--accent-primary);
+        }
+
+        .recommendation-name-link .link-icon {
+            width: 14px;
+            height: 14px;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+        }
+
+        .recommendation-name-link:hover .link-icon {
+            opacity: 1;
+        }
+
+        .recommendation-rating {
+            color: #f59e0b;
+            font-size: 16px;
+            letter-spacing: 2px;
+        }
+
+        .recommendation-reasons {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .recommendation-reasons li {
+            position: relative;
+            padding-left: 20px;
+            margin-bottom: 10px;
+            font-size: 14px;
+            line-height: 1.7;
+            color: var(--text-secondary);
+        }
+
+        .recommendation-reasons li:last-child {
+            margin-bottom: 0;
+        }
+
+        .recommendation-reasons li::before {
+            content: '•';
+            position: absolute;
+            left: 6px;
+            color: var(--accent-primary);
+            font-weight: bold;
+        }
+
+        .recommendation-reasons li strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .recommendation-reasons a {
+            color: var(--accent-primary);
+            text-decoration: underline;
+            text-decoration-thickness: 1px;
+            text-underline-offset: 3px;
+            transition: color 0.2s ease;
+        }
+
+        .recommendation-reasons a:hover {
+            color: var(--text-primary);
+        }
+
+        /* 评分标准 */
+        .rating-guide {
+            margin-bottom: 24px;
+            font-size: 12px;
+            color: var(--text-tertiary);
+        }
+
+        /* 响应式 */
+        /* 大屏幕（1200px - 1600px） */
+        @media (max-width: 1600px) {
+            body {
+                padding: 48px 80px;
+            }
+
+            .container {
+                max-width: 1280px;
+            }
+        }
+
+        /* 中等屏幕（768px - 1200px） */
+        @media (max-width: 1200px) {
+            body {
+                padding: 40px 40px;
+            }
+
+            .container {
+                max-width: 1100px;
+            }
+        }
+
+        /* 平板/小屏幕（480px - 768px） */
+        @media (max-width: 768px) {
+            body {
+                padding: 24px 16px;
+            }
+
+            .container {
+                max-width: 100%;
+            }
+
+            .header {
+                margin-bottom: 24px;
+                padding: 24px 0;
+            }
+
+            .header h1 {
+                font-size: 22px;
+            }
+
+            .header .subtitle {
+                font-size: 13px;
+            }
+
+            .filter-bar {
+                gap: 8px;
+            }
+
+            .filter-btn {
+                padding: 8px 12px;
+                font-size: 12px;
+                min-height: 36px;
+            }
+
+            .reset-btn {
+                padding: 8px 12px;
+                font-size: 12px;
+                min-height: 36px;
+            }
+
+            .dropdown-menu {
+                position: fixed;
+                left: 50% !important;
+                top: 50% !important;
+                transform: translate(-50%, -50%);
+                animation: dropdownFadeCenter 0.2s ease-out;
+                min-width: 280px;
+                max-width: calc(100vw - 48px);
+                max-height: 80vh;
+                overflow-y: auto;
+            }
+
+            th, td {
+                padding: 12px 14px;
+                font-size: 12px;
+            }
+
+            .action-btn {
+                padding: 6px 14px;
+                font-size: 11px;
+            }
+
+            .table-wrapper {
+                border-radius: var(--radius-lg);
+            }
+        }
+
+        /* 手机屏幕（<480px） */
+        @media (max-width: 480px) {
+            body {
+                padding: 16px 12px;
+            }
+
+            .header {
+                margin-bottom: 16px;
+                padding: 16px 0;
+            }
+
+            .header h1 {
+                font-size: 18px;
+            }
+
+            .github-link span {
+                display: none;
+            }
+
+            .filter-btn {
+                padding: 7px 10px;
+                font-size: 11px;
+                min-height: 34px;
+            }
+
+            .reset-btn {
+                padding: 7px 10px;
+                font-size: 11px;
+                min-height: 34px;
+            }
+
+            th, td {
+                padding: 10px 12px;
+                font-size: 11px;
+            }
+
+            .model-tag, .benefit {
+                font-size: 10px;
+                padding: 3px 8px;
+            }
+
+            .price {
+                font-size: 12px;
+            }
+
+            .price-monthly {
+                font-size: 12px;
+            }
+
+            .price-normal {
+                font-size: 12px;
+            }
+
+            .request-count {
+                font-size: 12px;
+            }
+
+            .unit {
+                font-size: 10px;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+
+        <!-- 页面导航 Tab -->
+        <nav class="page-nav">
+            <a href="index.html" class="page-tab active">国内 Coding Plan</a>
+            <!-- 临时隐藏 -->
+            <!-- <a href="tools.html" class="page-tab">AI 编程工具</a> -->
+            <!-- <a href="relays.html" class="page-tab">API 中转站</a> -->
+            <div class="settings-wrapper">
+                <button class="settings-btn" id="settingsBtn" title="设置" aria-label="设置">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                    </svg>
+                </button>
+                <div class="settings-panel" id="settingsPanel" hidden>
+                    <div class="settings-panel-title">显示设置</div>
+                    <div class="settings-toggle-row">
+                        <label for="ultraWideToggle">超宽屏模式</label>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="ultraWideToggle">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- 顶部标题 -->
+        <div class="header">
+            <a href="https://github.com" target="_blank" class="github-link" id="githubLink">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                </svg>
+                <span id="githubText">GitHub</span>
+            </a>
+            <h1 id="pageTitle">AI Coding Plan 对比</h1>
+            <div class="update-date" id="updateDate">更新日期2026.3</div>
+            <div class="subtitle" id="subtitle">火山引擎方舟、阿里云百炼、Kimi、智谱、MiniMax Coding Plan，全面对比</div>
+            <div class="models" id="models">支持Doubao Seed 2.0，Qwen 3.5，MiniMax M2.5、GLM-5、Kimi-k2.5等模型</div>
+        </div>
+
+        <!-- 平台推荐 -->
+        <div class="recommendations" id="recommendations">
+            <!-- 动态填充 -->
+        </div>
+
+        <!-- 评分标准 -->
+        <div class="rating-guide" id="ratingGuide">
+            <!-- 动态填充 -->
+        </div>
+
+        <hr class="section-divider">
+
+        <!-- 顶部筛选栏 -->
+        <div class="filter-bar">
+            <!-- 平台筛选下拉 -->
+            <div class="filter-dropdown">
+                <button class="filter-btn" id="vendorBtn">
+                    <span>平台</span>
+                    <span class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span>
+                    <span class="count" id="vendorCount" style="display: none;">0</span>
+                </button>
+                <div class="dropdown-menu" id="vendorDropdown">
+                    <div class="dropdown-section">
+                        <div class="checkbox-group" id="vendorCheckboxes">
+                            <!-- 动态填充 -->
+                        </div>
+                    </div>
+                    <div class="dropdown-actions">
+                        <button class="dropdown-btn secondary" onclick="resetVendorFilter()">重置</button>
+                        <button class="dropdown-btn primary" onclick="closeAllDropdowns()">确定</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 类型筛选下拉 -->
+            <div class="filter-dropdown">
+                <button class="filter-btn" id="typeBtn">
+                    <span>类型</span>
+                    <span class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span>
+                    <span class="count" id="typeCount" style="display: none;">0</span>
+                </button>
+                <div class="dropdown-menu" id="typeDropdown">
+                    <div class="dropdown-section">
+                        <div class="checkbox-group" id="typeCheckboxes">
+                            <!-- 动态填充 -->
+                        </div>
+                    </div>
+                    <div class="dropdown-actions">
+                        <button class="dropdown-btn secondary" onclick="resetTypeFilter()">重置</button>
+                        <button class="dropdown-btn primary" onclick="closeAllDropdowns()">确定</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 首月价格筛选 -->
+            <div class="filter-dropdown">
+                <button class="filter-btn" id="firstMonthPriceBtn">
+                    <span>首月价格</span>
+                    <span class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span>
+                    <span class="count" id="firstMonthPriceCount" style="display: none;">●</span>
+                </button>
+                <div class="dropdown-menu" id="firstMonthPriceDropdown">
+                    <div class="dropdown-section">
+                        <div class="dropdown-title">首月价格区间 (元)</div>
+                        <div class="price-slider-container">
+                            <div class="price-slider">
+                                <div class="slider-track"></div>
+                                <div class="slider-range" id="firstMonthSliderRange"></div>
+                                <div class="slider-thumb" id="firstMonthSliderMin"></div>
+                                <div class="slider-thumb" id="firstMonthSliderMax"></div>
+                            </div>
+                            <div class="slider-values">
+                                <span class="slider-value" id="firstMonthMinValue">¥0</span>
+                                <span class="slider-value" id="firstMonthMaxValue">¥0</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="dropdown-actions">
+                        <button class="dropdown-btn secondary" onclick="resetFirstMonthPriceFilter()">重置</button>
+                        <button class="dropdown-btn primary" onclick="applyFirstMonthPriceFilter()">确定</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 包月价格筛选 -->
+            <div class="filter-dropdown">
+                <button class="filter-btn" id="monthlyPriceBtn">
+                    <span>包月价格</span>
+                    <span class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span>
+                    <span class="count" id="monthlyPriceCount" style="display: none;">●</span>
+                </button>
+                <div class="dropdown-menu" id="monthlyPriceDropdown">
+                    <div class="dropdown-section">
+                        <div class="dropdown-title">包月价格区间 (元)</div>
+                        <div class="price-slider-container">
+                            <div class="price-slider">
+                                <div class="slider-track"></div>
+                                <div class="slider-range" id="monthlySliderRange"></div>
+                                <div class="slider-thumb" id="monthlySliderMin"></div>
+                                <div class="slider-thumb" id="monthlySliderMax"></div>
+                            </div>
+                            <div class="slider-values">
+                                <span class="slider-value" id="monthlyMinValue">¥0</span>
+                                <span class="slider-value" id="monthlyMaxValue">¥0</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="dropdown-actions">
+                        <button class="dropdown-btn secondary" onclick="resetMonthlyPriceFilter()">重置</button>
+                        <button class="dropdown-btn primary" onclick="applyMonthlyPriceFilter()">确定</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 包季价格筛选 -->
+            <div class="filter-dropdown">
+                <button class="filter-btn" id="quarterlyPriceBtn">
+                    <span>包季价格</span>
+                    <span class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span>
+                    <span class="count" id="quarterlyPriceCount" style="display: none;">●</span>
+                </button>
+                <div class="dropdown-menu" id="quarterlyPriceDropdown">
+                    <div class="dropdown-section">
+                        <div class="dropdown-title">包季价格区间 (元)</div>
+                        <div class="price-slider-container">
+                            <div class="price-slider">
+                                <div class="slider-track"></div>
+                                <div class="slider-range" id="quarterlySliderRange"></div>
+                                <div class="slider-thumb" id="quarterlySliderMin"></div>
+                                <div class="slider-thumb" id="quarterlySliderMax"></div>
+                            </div>
+                            <div class="slider-values">
+                                <span class="slider-value" id="quarterlyMinValue">¥0</span>
+                                <span class="slider-value" id="quarterlyMaxValue">¥0</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="dropdown-actions">
+                        <button class="dropdown-btn secondary" onclick="resetQuarterlyPriceFilter()">重置</button>
+                        <button class="dropdown-btn primary" onclick="applyQuarterlyPriceFilter()">确定</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 包年价格筛选 -->
+            <div class="filter-dropdown">
+                <button class="filter-btn" id="yearlyPriceBtn">
+                    <span>包年价格</span>
+                    <span class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span>
+                    <span class="count" id="yearlyPriceCount" style="display: none;">●</span>
+                </button>
+                <div class="dropdown-menu" id="yearlyPriceDropdown">
+                    <div class="dropdown-section">
+                        <div class="dropdown-title">包年价格区间 (元)</div>
+                        <div class="price-slider-container">
+                            <div class="price-slider">
+                                <div class="slider-track"></div>
+                                <div class="slider-range" id="yearlySliderRange"></div>
+                                <div class="slider-thumb" id="yearlySliderMin"></div>
+                                <div class="slider-thumb" id="yearlySliderMax"></div>
+                            </div>
+                            <div class="slider-values">
+                                <span class="slider-value" id="yearlyMinValue">¥0</span>
+                                <span class="slider-value" id="yearlyMaxValue">¥0</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="dropdown-actions">
+                        <button class="dropdown-btn secondary" onclick="resetYearlyPriceFilter()">重置</button>
+                        <button class="dropdown-btn primary" onclick="applyYearlyPriceFilter()">确定</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5小时请求数筛选 -->
+            <div class="filter-dropdown">
+                <button class="filter-btn" id="fiveHoursRequestBtn">
+                    <span>5小时请求数</span>
+                    <span class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span>
+                    <span class="count" id="fiveHoursRequestCount" style="display: none;">●</span>
+                </button>
+                <div class="dropdown-menu" id="fiveHoursRequestDropdown">
+                    <div class="dropdown-section">
+                        <div class="dropdown-title">5小时请求数区间</div>
+                        <div class="price-slider-container">
+                            <div class="price-slider">
+                                <div class="slider-track"></div>
+                                <div class="slider-range" id="fiveHoursRequestSliderRange"></div>
+                                <div class="slider-thumb" id="fiveHoursRequestSliderMin"></div>
+                                <div class="slider-thumb" id="fiveHoursRequestSliderMax"></div>
+                            </div>
+                            <div class="slider-values">
+                                <span class="slider-value" id="fiveHoursRequestMinValue">0</span>
+                                <span class="slider-value" id="fiveHoursRequestMaxValue">0</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="dropdown-actions">
+                        <button class="dropdown-btn secondary" onclick="resetFiveHoursRequestFilter()">重置</button>
+                        <button class="dropdown-btn primary" onclick="applyFiveHoursRequestFilter()">确定</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 每周请求数筛选 -->
+            <div class="filter-dropdown">
+                <button class="filter-btn" id="weeklyRequestBtn">
+                    <span>每周请求数</span>
+                    <span class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span>
+                    <span class="count" id="weeklyRequestCount" style="display: none;">●</span>
+                </button>
+                <div class="dropdown-menu" id="weeklyRequestDropdown">
+                    <div class="dropdown-section">
+                        <div class="dropdown-title">每周请求数区间</div>
+                        <div class="price-slider-container">
+                            <div class="price-slider">
+                                <div class="slider-track"></div>
+                                <div class="slider-range" id="weeklyRequestSliderRange"></div>
+                                <div class="slider-thumb" id="weeklyRequestSliderMin"></div>
+                                <div class="slider-thumb" id="weeklyRequestSliderMax"></div>
+                            </div>
+                            <div class="slider-values">
+                                <span class="slider-value" id="weeklyRequestMinValue">0</span>
+                                <span class="slider-value" id="weeklyRequestMaxValue">0</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="dropdown-actions">
+                        <button class="dropdown-btn secondary" onclick="resetWeeklyRequestFilter()">重置</button>
+                        <button class="dropdown-btn primary" onclick="applyWeeklyRequestFilter()">确定</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 每月请求数筛选 -->
+            <div class="filter-dropdown">
+                <button class="filter-btn" id="monthlyRequestBtn">
+                    <span>每月请求数</span>
+                    <span class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span>
+                    <span class="count" id="monthlyRequestCount" style="display: none;">●</span>
+                </button>
+                <div class="dropdown-menu" id="monthlyRequestDropdown">
+                    <div class="dropdown-section">
+                        <div class="dropdown-title">每月请求数区间</div>
+                        <div class="price-slider-container">
+                            <div class="price-slider">
+                                <div class="slider-track"></div>
+                                <div class="slider-range" id="monthlyRequestSliderRange"></div>
+                                <div class="slider-thumb" id="monthlyRequestSliderMin"></div>
+                                <div class="slider-thumb" id="monthlyRequestSliderMax"></div>
+                            </div>
+                            <div class="slider-values">
+                                <span class="slider-value" id="monthlyRequestMinValue">0</span>
+                                <span class="slider-value" id="monthlyRequestMaxValue">0</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="dropdown-actions">
+                        <button class="dropdown-btn secondary" onclick="resetMonthlyRequestFilter()">重置</button>
+                        <button class="dropdown-btn primary" onclick="applyMonthlyRequestFilter()">确定</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Token上限筛选下拉 -->
+            <div class="filter-dropdown">
+                <button class="filter-btn" id="tokenLimitBtn">
+                    <span>Token上限</span>
+                    <span class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span>
+                    <span class="count" id="tokenLimitCount" style="display: none;">●</span>
+                </button>
+                <div class="dropdown-menu" id="tokenLimitDropdown">
+                    <div class="dropdown-section">
+                        <div class="dropdown-title">Token上限区间 (百万)</div>
+                        <div class="price-slider-container">
+                            <div class="price-slider">
+                                <div class="slider-track"></div>
+                                <div class="slider-range" id="tokenLimitSliderRange"></div>
+                                <div class="slider-thumb" id="tokenLimitSliderMin"></div>
+                                <div class="slider-thumb" id="tokenLimitSliderMax"></div>
+                            </div>
+                            <div class="slider-values">
+                                <span class="slider-value" id="tokenLimitMinValue">0</span>
+                                <span class="slider-value" id="tokenLimitMaxValue">0</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="dropdown-actions">
+                        <button class="dropdown-btn secondary" onclick="resetTokenLimitFilter()">重置</button>
+                        <button class="dropdown-btn primary" onclick="applyTokenLimitFilter()">确定</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 模型筛选下拉 -->
+            <div class="filter-dropdown">
+                <button class="filter-btn" id="modelBtn">
+                    <span>模型</span>
+                    <span class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span>
+                    <span class="count" id="modelCount" style="display: none;">0</span>
+                </button>
+                <div class="dropdown-menu" id="modelDropdown">
+                    <div class="dropdown-section">
+                        <div class="checkbox-group" id="modelCheckboxes">
+                            <!-- 动态填充 -->
+                        </div>
+                    </div>
+                    <div class="dropdown-actions">
+                        <button class="dropdown-btn secondary" onclick="resetModelFilter()">重置</button>
+                        <button class="dropdown-btn primary" onclick="closeAllDropdowns()">确定</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 显示已下线套餐 -->
+            <div class="filter-checkbox">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="showDiscontinued" onchange="applyFilters()">
+                    <span class="checkbox-text">显示已下线套餐</span>
+                </label>
+            </div>
+
+            <!-- 重置按钮 -->
+            <button class="reset-btn" onclick="resetAllFilters()">重置筛选</button>
+
+            <!-- 统计信息 -->
+            <div class="stats-bar">
+                <span>显示 <strong id="showingCount">0</strong> / <strong id="totalCount">0</strong> 个套餐</span>
+            </div>
+        </div>
+
+        <!-- 表格 -->
+        <div class="table-wrapper">
+            <div class="table-scroll" id="tableScroll">
+                <table id="plansTable">
+                    <thead>
+                        <tr>
+                            <th class="sortable sticky-first" data-column="vendor">平台</th>
+                            <th class="sticky-second">套餐</th>
+                            <th>类型</th>
+                            <th>跳转链接</th>
+                            <th class="sortable" data-column="firstMonthPrice">首月价格</th>
+                            <th class="sortable" data-column="monthlyPrice">连续包月</th>
+                            <th class="sortable" data-column="quarterlyPrice">连续包季</th>
+                            <th class="sortable" data-column="yearlyPrice">连续包年</th>
+                            <th>支持模型</th>
+                            <th class="sortable" data-column="fiveHoursRequests">5小时请求数</th>
+                            <th class="sortable" data-column="weeklyRequests">每周请求数</th>
+                            <th class="sortable" data-column="monthlyRequests">每月总请求数</th>
+                            <th class="sortable" data-column="tokenLimit">Token上限</th>
+                            <th>其他权益</th>
+                            <th>状态</th>
+                            <th class="note-header">备注</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <!-- 动态填充 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 底部说明 -->
+        <div class="notes-section" id="notesSection">
+            <!-- 动态填充 -->
+        </div>
+
+        <!--
+        <div class="updates-section" id="updatesSection">
+        </div>
+-->
+
+        <!-- 账号出售区域 -->
+        <div class="account-sale-section" id="accountSaleSection">
+            <!-- 动态填充 -->
+        </div>
+    </div>
+
+    <script>
+        // 文件路径
+        const PLANS_FILE_PATH = './plans.json';
+        const CONFIG_FILE_PATH = './config.json';
+
+        // 全局配置
+        let appConfig = {};
+
+        // 全局数据
+        let allPlans = [];
+        let filteredPlans = [];
+        let currentSort = { column: null, direction: 'asc' };
+        // 已确认的选择
+        let selectedVendors = new Set();
+        let selectedModels = new Set();
+        let selectedTypes = new Set();
+        let priceFilters = {
+            firstMonth: { min: null, max: null },
+            monthly: { min: null, max: null },
+            quarterly: { min: null, max: null },
+            yearly: { min: null, max: null }
+        };
+
+        // 临时选择（下拉框中的操作，只有点确定才提交）
+        let tempSelectedVendors = new Set();
+        let tempSelectedModels = new Set();
+        let tempSelectedTypes = new Set();
+        let tempPriceFilters = {
+            firstMonth: { min: null, max: null },
+            monthly: { min: null, max: null },
+            quarterly: { min: null, max: null },
+            yearly: { min: null, max: null }
+        };
+
+        let requestFilters = {
+            fiveHours: { min: null, max: null },
+            weekly: { min: null, max: null },
+            monthly: { min: null, max: null },
+            tokenLimit: { min: null, max: null }
+        };
+
+        // 检查价格筛选是否已应用
+        function isPriceFilterApplied(priceType) {
+            return priceFilters[priceType].min !== null && priceFilters[priceType].max !== null;
+        }
+
+        function isRequestFilterApplied(requestType) {
+            return requestFilters[requestType].min !== null && requestFilters[requestType].max !== null;
+        }
+        let activeDropdown = null;
+
+        // DOM 元素
+        const typeBtn = document.getElementById('typeBtn');
+        const typeDropdown = document.getElementById('typeDropdown');
+        const typeCheckboxes = document.getElementById('typeCheckboxes');
+        const typeCount = document.getElementById('typeCount');
+        const tokenLimitBtn = document.getElementById('tokenLimitBtn');
+        const tokenLimitDropdown = document.getElementById('tokenLimitDropdown');
+        const tokenLimitCount = document.getElementById('tokenLimitCount');
+        const vendorBtn = document.getElementById('vendorBtn');
+        const modelBtn = document.getElementById('modelBtn');
+        const vendorDropdown = document.getElementById('vendorDropdown');
+        const modelDropdown = document.getElementById('modelDropdown');
+        const vendorCheckboxes = document.getElementById('vendorCheckboxes');
+        const modelCheckboxes = document.getElementById('modelCheckboxes');
+        const vendorCount = document.getElementById('vendorCount');
+        const modelCount = document.getElementById('modelCount');
+        
+        // 首月价格
+        const firstMonthPriceBtn = document.getElementById('firstMonthPriceBtn');
+        const firstMonthPriceDropdown = document.getElementById('firstMonthPriceDropdown');
+        const firstMonthPriceCount = document.getElementById('firstMonthPriceCount');
+        const firstMonthSliderMin = document.getElementById('firstMonthSliderMin');
+        const firstMonthSliderMax = document.getElementById('firstMonthSliderMax');
+        const firstMonthSliderRange = document.getElementById('firstMonthSliderRange');
+        const firstMonthMinValue = document.getElementById('firstMonthMinValue');
+        const firstMonthMaxValue = document.getElementById('firstMonthMaxValue');
+        
+        // 包月价格
+        const monthlyPriceBtn = document.getElementById('monthlyPriceBtn');
+        const monthlyPriceDropdown = document.getElementById('monthlyPriceDropdown');
+        const monthlyPriceCount = document.getElementById('monthlyPriceCount');
+        const monthlySliderMin = document.getElementById('monthlySliderMin');
+        const monthlySliderMax = document.getElementById('monthlySliderMax');
+        const monthlySliderRange = document.getElementById('monthlySliderRange');
+        const monthlyMinValue = document.getElementById('monthlyMinValue');
+        const monthlyMaxValue = document.getElementById('monthlyMaxValue');
+        
+        // 包季价格
+        const quarterlyPriceBtn = document.getElementById('quarterlyPriceBtn');
+        const quarterlyPriceDropdown = document.getElementById('quarterlyPriceDropdown');
+        const quarterlyPriceCount = document.getElementById('quarterlyPriceCount');
+        const quarterlySliderMin = document.getElementById('quarterlySliderMin');
+        const quarterlySliderMax = document.getElementById('quarterlySliderMax');
+        const quarterlySliderRange = document.getElementById('quarterlySliderRange');
+        const quarterlyMinValue = document.getElementById('quarterlyMinValue');
+        const quarterlyMaxValue = document.getElementById('quarterlyMaxValue');
+        
+        // 包年价格
+        const yearlyPriceBtn = document.getElementById('yearlyPriceBtn');
+        const yearlyPriceDropdown = document.getElementById('yearlyPriceDropdown');
+        const yearlyPriceCount = document.getElementById('yearlyPriceCount');
+        const yearlySliderMin = document.getElementById('yearlySliderMin');
+        const yearlySliderMax = document.getElementById('yearlySliderMax');
+        const yearlySliderRange = document.getElementById('yearlySliderRange');
+        const yearlyMinValue = document.getElementById('yearlyMinValue');
+        const yearlyMaxValue = document.getElementById('yearlyMaxValue');
+
+        // 请求数筛选
+        const fiveHoursRequestBtn = document.getElementById('fiveHoursRequestBtn');
+        const fiveHoursRequestDropdown = document.getElementById('fiveHoursRequestDropdown');
+        const fiveHoursRequestCount = document.getElementById('fiveHoursRequestCount');
+        const weeklyRequestBtn = document.getElementById('weeklyRequestBtn');
+        const weeklyRequestDropdown = document.getElementById('weeklyRequestDropdown');
+        const weeklyRequestCount = document.getElementById('weeklyRequestCount');
+        const monthlyRequestBtn = document.getElementById('monthlyRequestBtn');
+        const monthlyRequestDropdown = document.getElementById('monthlyRequestDropdown');
+        const monthlyRequestCount = document.getElementById('monthlyRequestCount');
+        
+        const tableBody = document.getElementById('tableBody');
+        const showingCount = document.getElementById('showingCount');
+        const totalCount = document.getElementById('totalCount');
+        const tableScroll = document.getElementById('tableScroll');
+
+        // 初始化筛选器
+        function initFilters() {
+            // 类型筛选
+            const types = [...new Set(allPlans.map(p => p.type || 'Coding Plan'))].sort();
+            types.forEach(type => {
+                const div = document.createElement('div');
+                div.className = 'checkbox-item';
+                div.innerHTML = `
+                    <input type="checkbox" id="type_${type}" value="${type}" onchange="updateTypeSelection()">
+                    <label for="type_${type}">${type}</label>
+                `;
+                typeCheckboxes.appendChild(div);
+            });
+
+            const vendors = [...new Set(allPlans.map(p => p['vendor']))].sort();
+            vendors.forEach(vendor => {
+                const div = document.createElement('div');
+                div.className = 'checkbox-item';
+                div.innerHTML = `
+                    <input type="checkbox" id="vendor_${vendor}" value="${vendor}" onchange="updateVendorSelection()">
+                    <label for="vendor_${vendor}">${vendor}</label>
+                `;
+                vendorCheckboxes.appendChild(div);
+            });
+
+            const models = [...new Set(allPlans.flatMap(p => p.models))].sort();
+            models.forEach(model => {
+                const div = document.createElement('div');
+                div.className = 'checkbox-item';
+                div.innerHTML = `
+                    <input type="checkbox" id="model_${model}" value="${model}" onchange="updateModelSelection()">
+                    <label for="model_${model}">${model}</label>
+                `;
+                modelCheckboxes.appendChild(div);
+            });
+        }
+
+        // 初始化价格滑块
+        function initPriceSliders() {
+            initPriceSlider('firstMonth');
+            initPriceSlider('monthly');
+            initPriceSlider('quarterly');
+            initPriceSlider('yearly');
+        }
+
+        // 非窄屏下：仅当菜单超出视口右缘时，改为相对触发器右对齐（换行后仍按实际位置计算）
+        function alignFilterDropdownInViewport(dropdown) {
+            dropdown.style.left = '';
+            dropdown.style.right = '';
+            if (window.matchMedia('(max-width: 768px)').matches) {
+                return;
+            }
+            requestAnimationFrame(() => {
+                if (!dropdown.classList.contains('show')) return;
+                const margin = 12;
+                const rect = dropdown.getBoundingClientRect();
+                if (rect.right > window.innerWidth - margin) {
+                    dropdown.style.left = 'auto';
+                    dropdown.style.right = '0';
+                }
+            });
+        }
+
+        // 下拉菜单控制
+        function toggleDropdown(btn, dropdown, type = null) {
+            if (activeDropdown && activeDropdown !== dropdown) {
+                activeDropdown.classList.remove('show');
+                const prevBtn = activeDropdown.previousElementSibling;
+                prevBtn.classList.remove('active');
+            }
+
+            const isOpen = dropdown.classList.contains('show');
+            closeDropdownWithoutFilter();
+
+            if (!isOpen) {
+                dropdown.classList.add('show');
+                btn.classList.add('active');
+                activeDropdown = dropdown;
+
+                // 打开下拉框时，初始化临时状态为当前已确认状态
+                if (type === 'type') {
+                    tempSelectedTypes = new Set(selectedTypes);
+                    syncTypeCheckboxes();
+                } else if (type === 'tokenLimit') {
+                    if (requestFilters.tokenLimit.min !== null && requestFilters.tokenLimit.max !== null) {
+                        updateRequestSliderVisuals('tokenLimit', requestFilters.tokenLimit.min, requestFilters.tokenLimit.max);
+                    } else {
+                        updateRequestSliderVisuals('tokenLimit', requestSliders.tokenLimit.minValue, requestSliders.tokenLimit.maxValue);
+                    }
+                } else if (type === 'vendor') {
+                    tempSelectedVendors = new Set(selectedVendors);
+                    syncVendorCheckboxes();
+                } else if (type === 'model') {
+                    tempSelectedModels = new Set(selectedModels);
+                    syncModelCheckboxes();
+                } else if (type && tempPriceFilters[type]) {
+                    tempPriceFilters[type].min = priceFilters[type].min;
+                    tempPriceFilters[type].max = priceFilters[type].max;
+                    if (priceFilters[type].min !== null && priceFilters[type].max !== null) {
+                        updateSliderVisuals(type, priceFilters[type].min, priceFilters[type].max);
+                    } else {
+                        updateSliderVisuals(type, priceSliders[type].minValue, priceSliders[type].maxValue);
+                    }
+                } else if (type === 'fiveHours' || type === 'weekly' || type === 'monthly') {
+                    if (requestFilters[type].min !== null && requestFilters[type].max !== null) {
+                        updateRequestSliderVisuals(type, requestFilters[type].min, requestFilters[type].max);
+                    } else {
+                        updateRequestSliderVisuals(type, requestSliders[type].minValue, requestSliders[type].maxValue);
+                    }
+                }
+
+                alignFilterDropdownInViewport(dropdown);
+            }
+        }
+
+        // 同步厂商复选框状态
+        function syncTypeCheckboxes() {
+            document.querySelectorAll('#typeCheckboxes input').forEach(cb => {
+                cb.checked = tempSelectedTypes.has(cb.value);
+            });
+        }
+
+
+
+        function syncVendorCheckboxes() {
+            document.querySelectorAll('#vendorCheckboxes input').forEach(cb => {
+                cb.checked = tempSelectedVendors.has(cb.value);
+            });
+        }
+
+        // 同步模型复选框状态
+        function syncModelCheckboxes() {
+            document.querySelectorAll('#modelCheckboxes input').forEach(cb => {
+                cb.checked = tempSelectedModels.has(cb.value);
+            });
+        }
+
+        function closeAllDropdowns() {
+            // 提交临时状态到正式状态
+            if (activeDropdown === typeDropdown) {
+                selectedTypes = new Set(tempSelectedTypes);
+                updateTypeCount();
+            } else if (activeDropdown === vendorDropdown) {
+                selectedVendors = new Set(tempSelectedVendors);
+                updateVendorCount();
+            } else if (activeDropdown === modelDropdown) {
+                selectedModels = new Set(tempSelectedModels);
+                updateModelCount();
+            }
+
+            document.querySelectorAll('.dropdown-menu').forEach(d => d.classList.remove('show'));
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            activeDropdown = null;
+            // 应用筛选
+            applyFilters();
+        }
+
+        // 价格筛选的确定按钮单独处理，避免重复调用 applyFilters
+        function closeDropdownWithoutFilter() {
+            // 恢复按钮显示到已确认状态
+            if (activeDropdown === typeDropdown) {
+                updateTypeCount();
+            } else if (activeDropdown === vendorDropdown) {
+                updateVendorCount();
+            } else if (activeDropdown === modelDropdown) {
+                updateModelCount();
+            }
+
+            document.querySelectorAll('.dropdown-menu').forEach(d => d.classList.remove('show'));
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            activeDropdown = null;
+        }
+
+        typeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleDropdown(typeBtn, typeDropdown, 'type');
+        });
+
+        tokenLimitBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleDropdown(tokenLimitBtn, tokenLimitDropdown, 'tokenLimit');
+        });
+
+        vendorBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleDropdown(vendorBtn, vendorDropdown, 'vendor');
+        });
+
+        // 首月价格
+        firstMonthPriceBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleDropdown(firstMonthPriceBtn, firstMonthPriceDropdown, 'firstMonth');
+        });
+
+        // 包月价格
+        monthlyPriceBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleDropdown(monthlyPriceBtn, monthlyPriceDropdown, 'monthly');
+        });
+
+        // 包季价格
+        quarterlyPriceBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleDropdown(quarterlyPriceBtn, quarterlyPriceDropdown, 'quarterly');
+        });
+
+        // 包年价格
+        yearlyPriceBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleDropdown(yearlyPriceBtn, yearlyPriceDropdown, 'yearly');
+        });
+
+        // 请求数筛选
+        fiveHoursRequestBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleDropdown(fiveHoursRequestBtn, fiveHoursRequestDropdown, 'fiveHours');
+        });
+
+        weeklyRequestBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleDropdown(weeklyRequestBtn, weeklyRequestDropdown, 'weekly');
+        });
+
+        monthlyRequestBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleDropdown(monthlyRequestBtn, monthlyRequestDropdown, 'monthly');
+        });
+
+        modelBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleDropdown(modelBtn, modelDropdown, 'model');
+        });
+
+        document.addEventListener('click', () => {
+            closeDropdownWithoutFilter();
+        });
+
+        document.querySelectorAll('.dropdown-menu').forEach(d => {
+            d.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+        });
+
+        // 更新选择
+        // 复选框操作只修改临时状态
+        function updateTypeSelection() {
+            tempSelectedTypes.clear();
+            document.querySelectorAll('#typeCheckboxes input:checked').forEach(cb => {
+                tempSelectedTypes.add(cb.value);
+            });
+            updateTempTypeCount();
+        }
+
+
+
+        function updateVendorSelection() {
+            tempSelectedVendors.clear();
+            document.querySelectorAll('#vendorCheckboxes input:checked').forEach(cb => {
+                tempSelectedVendors.add(cb.value);
+            });
+            // 显示临时计数
+            updateTempVendorCount();
+        }
+
+        function updateModelSelection() {
+            tempSelectedModels.clear();
+            document.querySelectorAll('#modelCheckboxes input:checked').forEach(cb => {
+                tempSelectedModels.add(cb.value);
+            });
+            // 显示临时计数
+            updateTempModelCount();
+        }
+
+        // 显示临时计数
+        function updateTempTypeCount() {
+            if (tempSelectedTypes.size > 0) {
+                typeCount.textContent = tempSelectedTypes.size;
+                typeCount.style.display = 'inline-block';
+            } else {
+                typeCount.style.display = 'none';
+            }
+        }
+
+
+
+        function updateTempVendorCount() {
+            if (tempSelectedVendors.size > 0) {
+                vendorCount.textContent = tempSelectedVendors.size;
+                vendorCount.style.display = 'inline-block';
+            } else {
+                vendorCount.style.display = 'none';
+            }
+        }
+
+        function updateTempModelCount() {
+            if (tempSelectedModels.size > 0) {
+                modelCount.textContent = tempSelectedModels.size;
+                modelCount.style.display = 'inline-block';
+            } else {
+                modelCount.style.display = 'none';
+            }
+        }
+
+        // 更新已确认状态的按钮显示
+        function updateTypeCount() {
+            if (selectedTypes.size > 0) {
+                typeCount.textContent = selectedTypes.size;
+                typeCount.style.display = 'inline-block';
+                typeBtn.classList.add('active');
+            } else {
+                typeCount.style.display = 'none';
+                typeBtn.classList.remove('active');
+            }
+        }
+
+        function updateTokenLimitCount() {
+            if (requestFilters.tokenLimit.min !== null || requestFilters.tokenLimit.max !== null) {
+                tokenLimitCount.style.display = 'inline-block';
+                tokenLimitBtn.classList.add('active');
+            } else {
+                tokenLimitCount.style.display = 'none';
+                tokenLimitBtn.classList.remove('active');
+            }
+        }
+
+        function updateVendorCount() {
+            if (selectedVendors.size > 0) {
+                vendorCount.textContent = selectedVendors.size;
+                vendorCount.style.display = 'inline-block';
+                vendorBtn.classList.add('active');
+            } else {
+                vendorCount.style.display = 'none';
+                vendorBtn.classList.remove('active');
+            }
+        }
+
+        function updateModelCount() {
+            if (selectedModels.size > 0) {
+                modelCount.textContent = selectedModels.size;
+                modelCount.style.display = 'inline-block';
+                modelBtn.classList.add('active');
+            } else {
+                modelCount.style.display = 'none';
+                modelBtn.classList.remove('active');
+            }
+        }
+
+        // 价格筛选相关函数
+        function updateFirstMonthPriceCount() {
+            if (priceFilters.firstMonth.min !== null || priceFilters.firstMonth.max !== null) {
+                firstMonthPriceCount.style.display = 'inline-block';
+                firstMonthPriceBtn.classList.add('active');
+            } else {
+                firstMonthPriceCount.style.display = 'none';
+                firstMonthPriceBtn.classList.remove('active');
+            }
+        }
+
+        function updateMonthlyPriceCount() {
+            if (priceFilters.monthly.min !== null || priceFilters.monthly.max !== null) {
+                monthlyPriceCount.style.display = 'inline-block';
+                monthlyPriceBtn.classList.add('active');
+            } else {
+                monthlyPriceCount.style.display = 'none';
+                monthlyPriceBtn.classList.remove('active');
+            }
+        }
+
+        function updateQuarterlyPriceCount() {
+            if (priceFilters.quarterly.min !== null || priceFilters.quarterly.max !== null) {
+                quarterlyPriceCount.style.display = 'inline-block';
+                quarterlyPriceBtn.classList.add('active');
+            } else {
+                quarterlyPriceCount.style.display = 'none';
+                quarterlyPriceBtn.classList.remove('active');
+            }
+        }
+
+        function updateYearlyPriceCount() {
+            if (priceFilters.yearly.min !== null || priceFilters.yearly.max !== null) {
+                yearlyPriceCount.style.display = 'inline-block';
+                yearlyPriceBtn.classList.add('active');
+            } else {
+                yearlyPriceCount.style.display = 'none';
+                yearlyPriceBtn.classList.remove('active');
+            }
+        }
+
+        function updateFiveHoursRequestCount() {
+            if (requestFilters.fiveHours.min !== null || requestFilters.fiveHours.max !== null) {
+                fiveHoursRequestCount.style.display = 'inline-block';
+                fiveHoursRequestBtn.classList.add('active');
+            } else {
+                fiveHoursRequestCount.style.display = 'none';
+                fiveHoursRequestBtn.classList.remove('active');
+            }
+        }
+
+        function updateWeeklyRequestCount() {
+            if (requestFilters.weekly.min !== null || requestFilters.weekly.max !== null) {
+                weeklyRequestCount.style.display = 'inline-block';
+                weeklyRequestBtn.classList.add('active');
+            } else {
+                weeklyRequestCount.style.display = 'none';
+                weeklyRequestBtn.classList.remove('active');
+            }
+        }
+
+        function updateMonthlyRequestCount() {
+            if (requestFilters.monthly.min !== null || requestFilters.monthly.max !== null) {
+                monthlyRequestCount.style.display = 'inline-block';
+                monthlyRequestBtn.classList.add('active');
+            } else {
+                monthlyRequestCount.style.display = 'none';
+                monthlyRequestBtn.classList.remove('active');
+            }
+        }
+
+        // 应用筛选
+        function applyFilters() {
+            filteredPlans = allPlans.filter(plan => {
+                // 已下线筛选：默认隐藏已下线套餐
+                const showDiscontinued = document.getElementById('showDiscontinued').checked;
+                if (plan.discontinued && !showDiscontinued) {
+                    return false;
+                }
+
+                // 类型筛选
+                if (selectedTypes.size > 0 && !selectedTypes.has(plan.type || 'Coding Plan')) {
+                    return false;
+                }
+
+                // 厂商筛选
+                if (selectedVendors.size > 0 && !selectedVendors.has(plan['vendor'])) {
+                    return false;
+                }
+
+                // 模型筛选
+                if (selectedModels.size > 0) {
+                    const hasModel = [...selectedModels].some(model => plan.models.includes(model));
+                    if (!hasModel) return false;
+                }
+
+                // 首月价格筛选
+                if (isPriceFilterApplied('firstMonth')) {
+                    if (priceFilters.firstMonth.min > 0 && plan.firstMonthPrice < priceFilters.firstMonth.min) {
+                        return false;
+                    }
+                    if (priceFilters.firstMonth.max < priceSliders.firstMonth.maxValue && plan.firstMonthPrice > priceFilters.firstMonth.max) {
+                        return false;
+                    }
+                }
+
+                // 包月价格筛选
+                if (isPriceFilterApplied('monthly')) {
+                    if (priceFilters.monthly.min > 0 && plan.monthlyPrice < priceFilters.monthly.min) {
+                        return false;
+                    }
+                    if (priceFilters.monthly.max < priceSliders.monthly.maxValue && plan.monthlyPrice > priceFilters.monthly.max) {
+                        return false;
+                    }
+                }
+
+                // 包季价格筛选
+                if (isPriceFilterApplied('quarterly')) {
+                    if (priceFilters.quarterly.min > 0 && plan.quarterlyPrice < priceFilters.quarterly.min) {
+                        return false;
+                    }
+                    if (priceFilters.quarterly.max < priceSliders.quarterly.maxValue && plan.quarterlyPrice > priceFilters.quarterly.max) {
+                        return false;
+                    }
+                }
+
+                // 包年价格筛选
+                if (isPriceFilterApplied('yearly')) {
+                    if (priceFilters.yearly.min > 0 && plan.yearlyPrice < priceFilters.yearly.min) {
+                        return false;
+                    }
+                    if (priceFilters.yearly.max < priceSliders.yearly.maxValue && plan.yearlyPrice > priceFilters.yearly.max) {
+                        return false;
+                    }
+                }
+
+                // 5小时请求数筛选
+                if (isRequestFilterApplied('fiveHours')) {
+                    if (typeof plan.fiveHoursRequests !== 'number') return false;
+                    if (plan.fiveHoursRequests < requestFilters.fiveHours.min) return false;
+                    if (plan.fiveHoursRequests > requestFilters.fiveHours.max) return false;
+                }
+
+                // 每周请求数筛选
+                if (isRequestFilterApplied('weekly')) {
+                    if (typeof plan.weeklyRequests !== 'number') return false;
+                    if (plan.weeklyRequests < requestFilters.weekly.min) return false;
+                    if (plan.weeklyRequests > requestFilters.weekly.max) return false;
+                }
+
+                // 每月请求数筛选
+                if (isRequestFilterApplied('monthly')) {
+                    if (typeof plan.monthlyRequests !== 'number') return false;
+                    if (plan.monthlyRequests < requestFilters.monthly.min) return false;
+                    if (plan.monthlyRequests > requestFilters.monthly.max) return false;
+                }
+
+                // Token上限筛选
+                if (isRequestFilterApplied('tokenLimit')) {
+                    if (typeof plan.tokenLimit !== 'number') return false;
+                    if (plan.tokenLimit < requestFilters.tokenLimit.min) return false;
+                    if (plan.tokenLimit > requestFilters.tokenLimit.max) return false;
+                }
+
+                return true;
+            });
+
+            showingCount.textContent = filteredPlans.length;
+            totalCount.textContent = allPlans.length;
+
+            if (currentSort.column) {
+                sortData(currentSort.column, currentSort.direction);
+            } else {
+                renderTable();
+            }
+        }
+
+        // 价格滑块状态
+        const priceSliders = {
+            firstMonth: { min: 0, max: 0, minValue: 1, maxValue: 0 },
+            monthly: { min: 0, max: 0, minValue: 1, maxValue: 0 },
+            quarterly: { min: 0, max: 0, minValue: 1, maxValue: 0 },
+            yearly: { min: 0, max: 0, minValue: 1, maxValue: 0 }
+        };
+
+        const requestSliders = {
+            fiveHours: { min: 0, max: 0, minValue: 0, maxValue: 0 },
+            weekly: { min: 0, max: 0, minValue: 0, maxValue: 0 },
+            monthly: { min: 0, max: 0, minValue: 0, maxValue: 0 },
+            tokenLimit: { min: 0, max: 0, minValue: 0, maxValue: 0 }
+        };
+
+        const requestPlanField = {
+            fiveHours: 'fiveHoursRequests',
+            weekly: 'weeklyRequests',
+            monthly: 'monthlyRequests',
+            tokenLimit: 'tokenLimit'
+        };
+
+        const requestSliderIdPrefix = {
+            fiveHours: 'fiveHoursRequest',
+            weekly: 'weeklyRequest',
+            monthly: 'monthlyRequest',
+            tokenLimit: 'tokenLimit'
+        };
+
+        // 计算价格类型的最大值
+        function getMaxPrice(priceType) {
+            if (allPlans.length === 0) return 1000;
+            const priceKey = priceType + 'Price';
+            const maxPrice = Math.max(...allPlans.map(plan => plan[priceKey]));
+            return Math.ceil(maxPrice); // 向上取整
+        }
+
+        // 计算价格类型的最小值
+        function getMinPrice(priceType) {
+            if (allPlans.length === 0) return 1;
+            const priceKey = priceType + 'Price';
+            const prices = allPlans.map(plan => plan[priceKey]).filter(p => p > 0);
+            if (prices.length === 0) return 1;
+            return Math.floor(Math.min(...prices)); // 向下取整
+        }
+
+        // 初始化价格滑块
+        function initPriceSlider(priceType) {
+            const slider = {
+                minThumb: document.getElementById(`${priceType}SliderMin`),
+                maxThumb: document.getElementById(`${priceType}SliderMax`),
+                range: document.getElementById(`${priceType}SliderRange`),
+                minValue: document.getElementById(`${priceType}MinValue`),
+                maxValue: document.getElementById(`${priceType}MaxValue`)
+            };
+
+            const minPrice = getMinPrice(priceType);
+            const maxPrice = getMaxPrice(priceType);
+            priceSliders[priceType].minValue = minPrice;
+            priceSliders[priceType].maxValue = maxPrice;
+            priceSliders[priceType].min = minPrice;
+            priceSliders[priceType].max = maxPrice;
+
+            updateSliderVisuals(priceType, minPrice, maxPrice);
+
+            // 添加拖动事件
+            addSliderDragEvents(priceType, slider);
+        }
+
+        // 更新滑块视觉效果（对数刻度）
+        function updateSliderVisuals(priceType, minPrice, maxPrice) {
+            const slider = priceSliders[priceType];
+            const minValue = Math.max(slider.minValue, Math.round(minPrice));
+            const maxValue = Math.min(slider.maxValue, Math.round(maxPrice));
+            const minLog = Math.log10(slider.minValue);
+            const maxLog = Math.log10(slider.maxValue);
+
+            // 对数刻度计算位置
+            const minPercent = ((Math.log10(minValue) - minLog) / (maxLog - minLog)) * 100;
+            const maxPercent = ((Math.log10(maxValue) - minLog) / (maxLog - minLog)) * 100;
+
+            const minThumb = document.getElementById(`${priceType}SliderMin`);
+            const maxThumb = document.getElementById(`${priceType}SliderMax`);
+            const range = document.getElementById(`${priceType}SliderRange`);
+            const minValueEl = document.getElementById(`${priceType}MinValue`);
+            const maxValueEl = document.getElementById(`${priceType}MaxValue`);
+
+            if (minThumb) minThumb.style.left = `${minPercent}%`;
+            if (maxThumb) maxThumb.style.left = `${maxPercent}%`;
+            if (range) {
+                range.style.left = `${minPercent}%`;
+                range.style.width = `${maxPercent - minPercent}%`;
+            }
+            if (minValueEl) minValueEl.textContent = `¥${minValue}`;
+            if (maxValueEl) maxValueEl.textContent = `¥${maxValue}`;
+
+            slider.min = minValue;
+            slider.max = maxValue;
+        }
+
+        // 添加滑块拖动事件
+        function addSliderDragEvents(priceType, slider) {
+            const { minThumb, maxThumb } = slider;
+            let isDragging = null;
+
+            const handleDrag = (e) => {
+                if (isDragging === null) return;
+
+                const rect = slider.minThumb.parentElement.getBoundingClientRect();
+                const x = (e.clientX || e.touches[0].clientX) - rect.left;
+                let percent = (x / rect.width) * 100;
+                percent = Math.max(0, Math.min(100, percent));
+
+                // 从对数刻度转换回实际值
+                const minLog = Math.log10(priceSliders[priceType].minValue);
+                const maxLog = Math.log10(priceSliders[priceType].maxValue);
+                const value = Math.pow(10, minLog + (percent / 100) * (maxLog - minLog));
+
+                if (isDragging === 'min') {
+                    const newMin = Math.min(value, priceSliders[priceType].max);
+                    updateSliderVisuals(priceType, newMin, priceSliders[priceType].max);
+                } else if (isDragging === 'max') {
+                    const newMax = Math.max(value, priceSliders[priceType].min);
+                    updateSliderVisuals(priceType, priceSliders[priceType].min, newMax);
+                }
+            };
+
+            const startDrag = (type) => (e) => {
+                e.preventDefault();
+                isDragging = type;
+                document.addEventListener('mousemove', handleDrag);
+                document.addEventListener('mouseup', stopDrag);
+                document.addEventListener('touchmove', handleDrag);
+                document.addEventListener('touchend', stopDrag);
+            };
+
+            const stopDrag = () => {
+                isDragging = null;
+                document.removeEventListener('mousemove', handleDrag);
+                document.removeEventListener('mouseup', stopDrag);
+                document.removeEventListener('touchmove', handleDrag);
+                document.removeEventListener('touchend', stopDrag);
+            };
+
+            minThumb.addEventListener('mousedown', startDrag('min'));
+            minThumb.addEventListener('touchstart', startDrag('min'));
+            maxThumb.addEventListener('mousedown', startDrag('max'));
+            maxThumb.addEventListener('touchstart', startDrag('max'));
+        }
+
+        function getNumericRequestValues(requestType) {
+            const key = requestPlanField[requestType];
+            return allPlans.map(plan => plan[key]).filter(v => typeof v === 'number');
+        }
+
+        function getMinRequest(requestType) {
+            const nums = getNumericRequestValues(requestType);
+            if (nums.length === 0) return 0;
+            return Math.floor(Math.min(...nums));
+        }
+
+        function getMaxRequest(requestType) {
+            const nums = getNumericRequestValues(requestType);
+            if (nums.length === 0) return 1;
+            return Math.ceil(Math.max(...nums));
+        }
+
+        function initRequestSliders() {
+            initRequestSlider('fiveHours');
+            initRequestSlider('weekly');
+            initRequestSlider('monthly');
+            initRequestSlider('tokenLimit');
+        }
+
+        function initRequestSlider(requestType) {
+            const prefix = requestSliderIdPrefix[requestType];
+            const slider = {
+                minThumb: document.getElementById(`${prefix}SliderMin`),
+                maxThumb: document.getElementById(`${prefix}SliderMax`)
+            };
+            let minBound = getMinRequest(requestType);
+            let maxBound = getMaxRequest(requestType);
+            if (maxBound <= minBound) {
+                maxBound = minBound + 1;
+            }
+            requestSliders[requestType].minValue = minBound;
+            requestSliders[requestType].maxValue = maxBound;
+            requestSliders[requestType].min = minBound;
+            requestSliders[requestType].max = maxBound;
+            updateRequestSliderVisuals(requestType, minBound, maxBound);
+            addRequestSliderDragEvents(requestType, slider);
+        }
+
+        function updateRequestSliderVisuals(requestType, minVal, maxVal) {
+            const slider = requestSliders[requestType];
+            const prefix = requestSliderIdPrefix[requestType];
+            let a = Math.max(slider.minValue, Math.round(minVal));
+            let b = Math.min(slider.maxValue, Math.round(maxVal));
+            const minValue = Math.min(a, b);
+            const maxValue = Math.max(a, b);
+            const span = slider.maxValue - slider.minValue || 1;
+            const minPercent = ((minValue - slider.minValue) / span) * 100;
+            const maxPercent = ((maxValue - slider.minValue) / span) * 100;
+
+            const minThumb = document.getElementById(`${prefix}SliderMin`);
+            const maxThumb = document.getElementById(`${prefix}SliderMax`);
+            const range = document.getElementById(`${prefix}SliderRange`);
+            const minValueEl = document.getElementById(`${prefix}MinValue`);
+            const maxValueEl = document.getElementById(`${prefix}MaxValue`);
+
+            if (minThumb) minThumb.style.left = `${minPercent}%`;
+            if (maxThumb) maxThumb.style.left = `${maxPercent}%`;
+            if (range) {
+                range.style.left = `${minPercent}%`;
+                range.style.width = `${maxPercent - minPercent}%`;
+            }
+            const fmt = (n) => {
+                if (typeof n !== 'number') return String(n);
+                return requestType === 'tokenLimit' ? n.toLocaleString() + 'M' : n.toLocaleString();
+            };
+            if (minValueEl) minValueEl.textContent = fmt(minValue);
+            if (maxValueEl) maxValueEl.textContent = fmt(maxValue);
+
+            slider.min = minValue;
+            slider.max = maxValue;
+        }
+
+        function addRequestSliderDragEvents(requestType, slider) {
+            const { minThumb, maxThumb } = slider;
+            let isDragging = null;
+
+            const handleDrag = (e) => {
+                if (isDragging === null) return;
+
+                const rect = minThumb.parentElement.getBoundingClientRect();
+                const x = (e.clientX || e.touches[0].clientX) - rect.left;
+                let percent = (x / rect.width) * 100;
+                percent = Math.max(0, Math.min(100, percent));
+
+                const rs = requestSliders[requestType];
+                const span = rs.maxValue - rs.minValue || 1;
+                const value = rs.minValue + (percent / 100) * span;
+                const rounded = Math.round(value);
+
+                if (isDragging === 'min') {
+                    const newMin = Math.min(rounded, rs.max);
+                    updateRequestSliderVisuals(requestType, newMin, rs.max);
+                } else if (isDragging === 'max') {
+                    const newMax = Math.max(rounded, rs.min);
+                    updateRequestSliderVisuals(requestType, rs.min, newMax);
+                }
+            };
+
+            const startDrag = (type) => (e) => {
+                e.preventDefault();
+                isDragging = type;
+                document.addEventListener('mousemove', handleDrag);
+                document.addEventListener('mouseup', stopDrag);
+                document.addEventListener('touchmove', handleDrag);
+                document.addEventListener('touchend', stopDrag);
+            };
+
+            const stopDrag = () => {
+                isDragging = null;
+                document.removeEventListener('mousemove', handleDrag);
+                document.removeEventListener('mouseup', stopDrag);
+                document.removeEventListener('touchmove', handleDrag);
+                document.removeEventListener('touchend', stopDrag);
+            };
+
+            minThumb.addEventListener('mousedown', startDrag('min'));
+            minThumb.addEventListener('touchstart', startDrag('min'));
+            maxThumb.addEventListener('mousedown', startDrag('max'));
+            maxThumb.addEventListener('touchstart', startDrag('max'));
+        }
+
+        // 首月价格筛选
+        function applyFirstMonthPriceFilter() {
+            // 提交临时状态到正式状态
+            const isInitial = priceSliders.firstMonth.min === priceSliders.firstMonth.minValue &&
+                              priceSliders.firstMonth.max === priceSliders.firstMonth.maxValue;
+            if (isInitial) {
+                priceFilters.firstMonth.min = null;
+                priceFilters.firstMonth.max = null;
+            } else {
+                priceFilters.firstMonth.min = priceSliders.firstMonth.min;
+                priceFilters.firstMonth.max = priceSliders.firstMonth.max;
+            }
+            updateFirstMonthPriceCount();
+            applyFilters();
+            closeDropdownWithoutFilter();
+        }
+
+        function resetFirstMonthPriceFilter() {
+            // 重置只影响临时状态（滑块显示），不提交
+            updateSliderVisuals('firstMonth', priceSliders.firstMonth.minValue, priceSliders.firstMonth.maxValue);
+        }
+
+        // 包月价格筛选
+        function applyMonthlyPriceFilter() {
+            const isInitial = priceSliders.monthly.min === priceSliders.monthly.minValue &&
+                              priceSliders.monthly.max === priceSliders.monthly.maxValue;
+            if (isInitial) {
+                priceFilters.monthly.min = null;
+                priceFilters.monthly.max = null;
+            } else {
+                priceFilters.monthly.min = priceSliders.monthly.min;
+                priceFilters.monthly.max = priceSliders.monthly.max;
+            }
+            updateMonthlyPriceCount();
+            applyFilters();
+            closeDropdownWithoutFilter();
+        }
+
+        function resetMonthlyPriceFilter() {
+            // 重置只影响临时状态（滑块显示），不提交
+            updateSliderVisuals('monthly', priceSliders.monthly.minValue, priceSliders.monthly.maxValue);
+        }
+
+        // 包季价格筛选
+        function applyQuarterlyPriceFilter() {
+            const isInitial = priceSliders.quarterly.min === priceSliders.quarterly.minValue &&
+                              priceSliders.quarterly.max === priceSliders.quarterly.maxValue;
+            if (isInitial) {
+                priceFilters.quarterly.min = null;
+                priceFilters.quarterly.max = null;
+            } else {
+                priceFilters.quarterly.min = priceSliders.quarterly.min;
+                priceFilters.quarterly.max = priceSliders.quarterly.max;
+            }
+            updateQuarterlyPriceCount();
+            applyFilters();
+            closeDropdownWithoutFilter();
+        }
+
+        function resetQuarterlyPriceFilter() {
+            // 重置只影响临时状态（滑块显示），不提交
+            updateSliderVisuals('quarterly', priceSliders.quarterly.minValue, priceSliders.quarterly.maxValue);
+        }
+
+        // 包年价格筛选
+        function applyYearlyPriceFilter() {
+            const isInitial = priceSliders.yearly.min === priceSliders.yearly.minValue &&
+                              priceSliders.yearly.max === priceSliders.yearly.maxValue;
+            if (isInitial) {
+                priceFilters.yearly.min = null;
+                priceFilters.yearly.max = null;
+            } else {
+                priceFilters.yearly.min = priceSliders.yearly.min;
+                priceFilters.yearly.max = priceSliders.yearly.max;
+            }
+            updateYearlyPriceCount();
+            applyFilters();
+            closeDropdownWithoutFilter();
+        }
+
+        function resetYearlyPriceFilter() {
+            // 重置只影响临时状态（滑块显示），不提交
+            updateSliderVisuals('yearly', priceSliders.yearly.minValue, priceSliders.yearly.maxValue);
+        }
+
+        function applyFiveHoursRequestFilter() {
+            const isInitial = requestSliders.fiveHours.min === requestSliders.fiveHours.minValue &&
+                              requestSliders.fiveHours.max === requestSliders.fiveHours.maxValue;
+            if (isInitial) {
+                requestFilters.fiveHours.min = null;
+                requestFilters.fiveHours.max = null;
+            } else {
+                requestFilters.fiveHours.min = requestSliders.fiveHours.min;
+                requestFilters.fiveHours.max = requestSliders.fiveHours.max;
+            }
+            updateFiveHoursRequestCount();
+            applyFilters();
+            closeDropdownWithoutFilter();
+        }
+
+        function resetFiveHoursRequestFilter() {
+            updateRequestSliderVisuals('fiveHours', requestSliders.fiveHours.minValue, requestSliders.fiveHours.maxValue);
+        }
+
+        function applyWeeklyRequestFilter() {
+            const isInitial = requestSliders.weekly.min === requestSliders.weekly.minValue &&
+                              requestSliders.weekly.max === requestSliders.weekly.maxValue;
+            if (isInitial) {
+                requestFilters.weekly.min = null;
+                requestFilters.weekly.max = null;
+            } else {
+                requestFilters.weekly.min = requestSliders.weekly.min;
+                requestFilters.weekly.max = requestSliders.weekly.max;
+            }
+            updateWeeklyRequestCount();
+            applyFilters();
+            closeDropdownWithoutFilter();
+        }
+
+        function resetWeeklyRequestFilter() {
+            updateRequestSliderVisuals('weekly', requestSliders.weekly.minValue, requestSliders.weekly.maxValue);
+        }
+
+        function applyMonthlyRequestFilter() {
+            const isInitial = requestSliders.monthly.min === requestSliders.monthly.minValue &&
+                              requestSliders.monthly.max === requestSliders.monthly.maxValue;
+            if (isInitial) {
+                requestFilters.monthly.min = null;
+                requestFilters.monthly.max = null;
+            } else {
+                requestFilters.monthly.min = requestSliders.monthly.min;
+                requestFilters.monthly.max = requestSliders.monthly.max;
+            }
+            updateMonthlyRequestCount();
+            applyFilters();
+            closeDropdownWithoutFilter();
+        }
+
+        function resetMonthlyRequestFilter() {
+            updateRequestSliderVisuals('monthly', requestSliders.monthly.minValue, requestSliders.monthly.maxValue);
+        }
+
+        function applyTokenLimitFilter() {
+            const isInitial = requestSliders.tokenLimit.min === requestSliders.tokenLimit.minValue &&
+                              requestSliders.tokenLimit.max === requestSliders.tokenLimit.maxValue;
+            if (isInitial) {
+                requestFilters.tokenLimit.min = null;
+                requestFilters.tokenLimit.max = null;
+            } else {
+                requestFilters.tokenLimit.min = requestSliders.tokenLimit.min;
+                requestFilters.tokenLimit.max = requestSliders.tokenLimit.max;
+            }
+            updateTokenLimitCount();
+            applyFilters();
+            closeDropdownWithoutFilter();
+        }
+
+        // 重置筛选
+        function resetVendorFilter() {
+            // 重置只影响临时状态，不提交
+            tempSelectedVendors.clear();
+            document.querySelectorAll('#vendorCheckboxes input').forEach(cb => cb.checked = false);
+            updateTempVendorCount();
+        }
+
+        function resetModelFilter() {
+            // 重置只影响临时状态，不提交
+            tempSelectedModels.clear();
+            document.querySelectorAll('#modelCheckboxes input').forEach(cb => cb.checked = false);
+            updateTempModelCount();
+        }
+
+        function resetTypeFilter() {
+            tempSelectedTypes.clear();
+            document.querySelectorAll('#typeCheckboxes input').forEach(cb => cb.checked = false);
+            updateTempTypeCount();
+        }
+
+        function resetTokenLimitFilter() {
+            updateRequestSliderVisuals('tokenLimit', requestSliders.tokenLimit.minValue, requestSliders.tokenLimit.maxValue);
+        }
+
+        function resetAllFilters() {
+            // 重置显示已下线套餐复选框
+            document.getElementById('showDiscontinued').checked = false;
+
+            // 重置价格筛选状态
+            priceFilters.firstMonth.min = null;
+            priceFilters.firstMonth.max = null;
+            priceFilters.monthly.min = null;
+            priceFilters.monthly.max = null;
+            priceFilters.quarterly.min = null;
+            priceFilters.quarterly.max = null;
+            priceFilters.yearly.min = null;
+            priceFilters.yearly.max = null;
+
+            // 重置请求数筛选状态
+            requestFilters.fiveHours.min = null;
+            requestFilters.fiveHours.max = null;
+            requestFilters.weekly.min = null;
+            requestFilters.weekly.max = null;
+            requestFilters.monthly.min = null;
+            requestFilters.monthly.max = null;
+            requestFilters.tokenLimit.min = null;
+            requestFilters.tokenLimit.max = null;
+
+            // 重置所有滑块到初始范围
+            Object.keys(priceSliders).forEach(type => {
+                updateSliderVisuals(type, priceSliders[type].minValue, priceSliders[type].maxValue);
+            });
+            Object.keys(requestSliders).forEach(type => {
+                updateRequestSliderVisuals(type, requestSliders[type].minValue, requestSliders[type].maxValue);
+            });
+
+            resetTypeFilter();
+            resetVendorFilter();
+            resetModelFilter();
+            resetTokenLimitFilter();
+
+            selectedTypes.clear();
+            updateTypeCount();
+            selectedVendors.clear();
+            updateVendorCount();
+            updateFirstMonthPriceCount();
+            updateMonthlyPriceCount();
+            updateQuarterlyPriceCount();
+            updateYearlyPriceCount();
+            updateFiveHoursRequestCount();
+            updateWeeklyRequestCount();
+            updateMonthlyRequestCount();
+            updateTokenLimitCount();
+            applyFilters();
+        }
+
+        // 排序数据
+        function sortData(column, direction = 'asc') {
+            currentSort = { column, direction };
+
+            // 辅助函数：将请求次数值转换为可排序的数值
+            const getRequestSortValue = (value) => {
+                if (typeof value === 'number') return value;
+                if (value === '无限制') return Infinity;  // 无限制排在最大
+                if (value === '未公开') return -1;        // 未公开排在最小
+                return -1;
+            };
+
+            // 辅助函数：将价格统一换算为人民币（$1 = ¥7）
+            const getPriceSortValue = (plan, field) => {
+                const v = plan[field];
+                if (typeof v !== 'number') return -1;  // '-' 等非数字排最小
+                return plan.currency === '$' ? v * 7 : v;
+            };
+
+            filteredPlans.sort((a, b) => {
+                let valueA, valueB;
+
+                switch (column) {
+                    case 'vendor':
+                        valueA = a['vendor'];
+                        valueB = b['vendor'];
+                        break;
+                    case 'plan':
+                        valueA = a['plan'];
+                        valueB = b['plan'];
+                        break;
+                    case 'action':
+                        valueA = a['plan'];
+                        valueB = b['plan'];
+                        break;
+                    case 'firstMonthPrice':
+                        valueA = getPriceSortValue(a, 'firstMonthPrice');
+                        valueB = getPriceSortValue(b, 'firstMonthPrice');
+                        break;
+                    case 'monthlyPrice':
+                        valueA = getPriceSortValue(a, 'monthlyPrice');
+                        valueB = getPriceSortValue(b, 'monthlyPrice');
+                        break;
+                    case 'quarterlyPrice':
+                        valueA = getPriceSortValue(a, 'quarterlyPrice');
+                        valueB = getPriceSortValue(b, 'quarterlyPrice');
+                        break;
+                    case 'yearlyPrice':
+                        valueA = getPriceSortValue(a, 'yearlyPrice');
+                        valueB = getPriceSortValue(b, 'yearlyPrice');
+                        break;
+                    case 'models':
+                        valueA = a['支持模型'];
+                        valueB = b['支持模型'];
+                        break;
+                    case 'fiveHoursRequests':
+                        valueA = getRequestSortValue(a.fiveHoursRequests);
+                        valueB = getRequestSortValue(b.fiveHoursRequests);
+                        break;
+                    case 'weeklyRequests':
+                        valueA = getRequestSortValue(a.weeklyRequests);
+                        valueB = getRequestSortValue(b.weeklyRequests);
+                        break;
+                    case 'monthlyRequests':
+                        valueA = getRequestSortValue(a.monthlyRequests);
+                        valueB = getRequestSortValue(b.monthlyRequests);
+                        break;
+                    case 'tokenLimit':
+                        valueA = getRequestSortValue(a.tokenLimit);
+                        valueB = getRequestSortValue(b.tokenLimit);
+                        break;
+                    case 'benefits':
+                        valueA = a['其他权益'];
+                        valueB = b['其他权益'];
+                        break;
+                    case 'note':
+                        valueA = a['note'];
+                        valueB = b['note'];
+                        break;
+                    default:
+                        return 0;
+                }
+
+                if (typeof valueA === 'number') {
+                    return direction === 'asc' ? valueA - valueB : valueB - valueA;
+                } else {
+                    return direction === 'asc'
+                        ? valueA.localeCompare(valueB, 'zh-CN')
+                        : valueB.localeCompare(valueA, 'zh-CN');
+                }
+            });
+
+            renderTable();
+            updateSortHeaders();
+        }
+
+        function updateSortHeaders() {
+            document.querySelectorAll('th').forEach(th => {
+                th.classList.remove('sort-asc', 'sort-desc');
+                if (th.dataset.column === currentSort.column) {
+                    th.classList.add(`sort-${currentSort.direction}`);
+                }
+            });
+        }
+
+        // 动态设置冻结列的 left 值
+        function updateStickyColumns() {
+            const firstCells = document.querySelectorAll('td.sticky-first, th.sticky-first');
+            const secondCells = document.querySelectorAll('td.sticky-second, th.sticky-second');
+
+            let firstWidth = 0;
+            firstCells.forEach(cell => {
+                firstWidth = Math.max(firstWidth, cell.offsetWidth);
+                cell.style.left = '0px';
+            });
+
+            secondCells.forEach(cell => {
+                cell.style.left = firstWidth + 'px';
+            });
+        }
+
+        // 渲染表格
+        function renderTable() {
+            if (filteredPlans.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="16">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">📭</div>
+                                <div class="empty-state-text">没有找到符合条件的套餐</div>
+                                <div class="empty-state-hint">请调整筛选条件或重置筛选</div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tableBody.innerHTML = filteredPlans.map(plan => `
+                <tr class="plan-row${plan.discontinued ? ' discontinued' : ''}">
+                    <td class="sticky-first"><span class="vendor-name">${escapeHtml(plan['vendor'])}</span></td>
+                    <td class="sticky-second"><span class="plan-name">${escapeHtml(plan['plan'])}</span></td>
+                    <td><span class="type-tag ${(plan.type || 'Coding Plan') === 'Token Plan' ? 'token-plan' : 'coding-plan'}">${escapeHtml(plan.type || 'Coding Plan')}</span></td>
+                    <td>
+                        <a href="${escapeHtml(plan['action'])}" target="_blank" class="action-btn">
+                            跳转开通
+                        </a>
+                    </td>
+                    <td><span class="price">${plan.currency||'¥'}${formatPrice(plan.firstMonthPrice)} <span class="unit">/ 首月</span></span></td>
+                    <td><span class="price-monthly">${plan.currency||'¥'}${formatPrice(plan.monthlyPrice)} <span class="unit">/ 月</span></span></td>
+                    <td><span class="price-normal">${plan.currency||'¥'}${formatPrice(plan.quarterlyPrice)} <span class="price-original">${plan.currency||'¥'}${formatPrice(plan.monthlyPrice * 3)}</span> <span class="unit">/ 季</span></span></td>
+                    <td><span class="price-normal">${plan.currency||'¥'}${formatPrice(plan.yearlyPrice)} <span class="price-original">${plan.currency||'¥'}${formatPrice(plan.monthlyPrice * 12)}</span> <span class="unit">/ 年</span></span></td>
+                    <td>
+                        ${plan.models.map(model => `<span class="model-tag">${escapeHtml(model)}</span>`).join('')}
+                    </td>
+                    <td><span class="request-count">${formatRequestCount(plan.fiveHoursRequests)} <span class="unit">/ 5小时</span></span></td>
+                    <td><span class="request-count">${formatRequestCount(plan.weeklyRequests)} <span class="unit">/ 周</span></span></td>
+                    <td><span class="request-count">${formatRequestCount(plan.monthlyRequests)} <span class="unit">/ 月</span></span></td>
+                    <td><span class="request-count">${typeof plan.tokenLimit === 'number' ? plan.tokenLimit + 'M <span class="unit">Tokens</span>' : escapeHtml(plan.tokenLimit || '无限制')}</span></td>
+                    <td>
+                        ${plan.benefits.map(benefit => `<span class="benefit">${escapeHtml(benefit)}</span>`).join('')}
+                    </td>
+                    <td>${plan.discontinued ? '<span class="status-offline">已下线</span>' : ''}</td>
+                    <td><span class="note">${(plan['note'] || '').replace(/\n/g, '<br>')}</span></td>
+                </tr>
+            `).join('');
+
+            setTimeout(updateStickyColumns, 0);
+        }
+
+        // 价格格式化函数：整数不显示小数，小数显示两位
+        function formatPrice(price) {
+            if (Number.isInteger(price)) {
+                return price.toString();
+            } else {
+                return price.toFixed(2);
+            }
+        }
+
+        // 请求次数格式化函数：数字则格式化，字符串直接返回
+        function formatRequestCount(value) {
+            if (typeof value === 'number') {
+                return value.toLocaleString();
+            }
+            return value;
+        }
+
+        // 表头排序点击
+        document.querySelectorAll('th.sortable').forEach(th => {
+            th.addEventListener('click', () => {
+                const column = th.dataset.column;
+                let direction = 'asc';
+
+                if (currentSort.column === column) {
+                    // 点击同一列，在升序、降序、取消之间循环
+                    if (currentSort.direction === 'asc') {
+                        direction = 'desc'; // 升序 -> 降序
+                    } else if (currentSort.direction === 'desc') {
+                        // 降序 -> 取消，恢复原始顺序
+                        currentSort = { column: null, direction: 'asc' };
+                        document.querySelectorAll('th').forEach(th => {
+                            th.classList.remove('sort-asc', 'sort-desc');
+                        });
+                        // 按照原始索引恢复顺序
+                        filteredPlans.sort((a, b) => a.originalIndex - b.originalIndex);
+                        renderTable();
+                        return; // 提前返回，不调用 sortData
+                    }
+                }
+
+                sortData(column, direction);
+            });
+        });
+
+        window.addEventListener('resize', updateStickyColumns);
+
+        tableScroll.addEventListener('scroll', () => {
+            requestAnimationFrame(updateStickyColumns);
+        });
+
+        // 加载配置文件
+        async function loadConfig() {
+            try {
+                const response = await fetch(CONFIG_FILE_PATH, {
+                    cache: 'no-store'
+                });
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                appConfig = await response.json();
+                applyConfig();
+                console.log('成功加载配置文件');
+            } catch (error) {
+                console.error('加载配置失败:', error);
+                // 使用默认配置
+                appConfig = {
+                    header: {
+                        title: "AI Coding Plan 对比",
+                        updateDate: "更新日期2026.3",
+                        subtitle: "火山引擎方舟、阿里云百炼、Kimi、智谱、MiniMax Coding Plan，全面对比",
+                        models: "支持Doubao Seed 2.0，Qwen 3.5，MiniMax M2.5、GLM-5、Kimi-k2.5等模型",
+                        github: {
+                            url: "https://github.com/bigheaven/vibetokenplan",
+                            text: "GitHub"
+                        }
+                    }
+                };
+                applyConfig();
+            }
+        }
+
+        // 应用配置
+        function applyConfig() {
+            if (appConfig.header) {
+                const h = appConfig.header;
+                document.title = `${h.title} - Coding Plan 对比工具`;
+                document.getElementById('pageTitle').textContent = h.title;
+                document.getElementById('updateDate').textContent = h.updateDate;
+                document.getElementById('subtitle').innerHTML = (h.subtitle || '').replace(/\n/g, '<br>');
+                document.getElementById('models').innerHTML = (h.models || '').replace(/\n/g, '<br>');
+                
+                if (h.github) {
+                    const githubLink = document.getElementById('githubLink');
+                    githubLink.href = h.github.url;
+                    document.getElementById('githubText').textContent = h.github.text;
+                }
+            }
+
+            // 渲染平台推荐（等 allPlans 数据加载完成后再调用，见 loadData 函数）
+            if (appConfig.recommendations && appConfig.recommendations.length > 0) {
+                renderRecommendations(appConfig.recommendations);
+            }
+
+            // 渲染评分标准
+            if (appConfig.ratingGuide) {
+                document.getElementById('ratingGuide').textContent = appConfig.ratingGuide;
+            }
+
+            // 渲染底部说明
+            if (appConfig.notes && appConfig.notes.length > 0) {
+                const notesSection = document.getElementById('notesSection');
+                notesSection.innerHTML = `
+                    <h3>💡 说明</h3>
+                    <ul>
+                        ${appConfig.notes.map(note => `<li>${note}</li>`).join('')}
+                    </ul>
+                `;
+            }
+
+            // 渲染更新日志
+            if (appConfig.updates && appConfig.updates.length > 0) {
+                const updatesSection = document.getElementById('updatesSection');
+                updatesSection.innerHTML = `
+                    <h3>📝 更新日志</h3>
+                    <ul class="updates-list">
+                        ${appConfig.updates.map(update => `
+                            <li class="update-item">
+                                <div class="log-date">${update.date}</div>
+                                <ul class="update-items">
+                                    ${update.items.map(item => `<li>${item}</li>`).join('')}
+                                </ul>
+                            </li>
+                        `).join('')}
+                    </ul>
+                `;
+            }
+
+            // 渲染账号出售区域
+            if (appConfig.accountSale) {
+                renderAccountSale(appConfig.accountSale);
+            }
+        }
+
+        // 渲染账号出售
+        function renderAccountSale(sale) {
+            const container = document.getElementById('accountSaleSection');
+            if (!container || !sale.accounts || sale.accounts.length === 0) return;
+
+            const accountsHtml = sale.accounts.map(acc => `
+                <div class="account-card">
+                    <div class="platform">${acc.platform}</div>
+                    <div class="detail">${acc.detail}</div>
+                    <span class="price-tag">${acc.price}</span>
+                </div>
+            `).join('');
+
+            const contactHtml = sale.qrcode ? `
+                <div class="contact-section">
+                    <div class="contact-info">
+                        <div class="label">感兴趣联系 ${sale.contact.label}</div>
+                        <div class="wechat-id">${sale.contact.id}</div>
+                    </div>
+                    <img src="${sale.qrcode}" alt="微信二维码" class="contact-qrcode">
+                </div>
+            ` : `
+                <div class="contact-section">
+                    <div class="contact-info">
+                        <div class="label">感兴趣联系 ${sale.contact.label}</div>
+                        <div class="wechat-id">${sale.contact.id}</div>
+                    </div>
+                </div>
+            `;
+
+            container.innerHTML = `
+                <h3>${sale.title}</h3>
+                <div class="description">${sale.description}</div>
+                <div class="account-cards">${accountsHtml}</div>
+                ${contactHtml}
+            `;
+        }
+
+        function sanitizeExternalUrl(url) {
+            if (typeof url !== 'string') return null;
+
+            try {
+                const parsedUrl = new URL(url, window.location.origin);
+                if (parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:') {
+                    return parsedUrl.href;
+                }
+            } catch (error) {
+                return null;
+            }
+
+            return null;
+        }
+
+        function formatRecommendationText(text) {
+            if (text === null || text === undefined) return '';
+
+            const linkPlaceholders = [];
+            const withLinkPlaceholders = String(text).replace(/\[([^\]]+)\]\(([^\s)]+)\)/g, (match, label, url) => {
+                const safeUrl = sanitizeExternalUrl(url);
+                if (!safeUrl) return match;
+
+                const placeholder = `__RECOMMENDATION_LINK_${linkPlaceholders.length}__`;
+                linkPlaceholders.push(
+                    `<a href="${escapeHtml(safeUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(label)}</a>`
+                );
+                return placeholder;
+            });
+
+            let formatted = escapeHtml(withLinkPlaceholders);
+            formatted = formatted.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+            formatted = formatted.replace(/__RECOMMENDATION_LINK_(\d+)__/g, (_, index) => {
+                return linkPlaceholders[Number(index)] || '';
+            });
+
+            return formatted;
+        }
+
+        // 渲染平台推荐
+        function renderRecommendations(recommendations) {
+            const container = document.getElementById('recommendations');
+            if (!container) return;
+
+            // Logo 映射
+            const logoMap = {
+                '智谱AI': 'zhipu.svg',
+                'MiniMax': 'minimax.svg',
+                '讯飞·星火': 'spark-color.svg',
+                '字节·方舟': 'bytedance.svg',
+                'Kimi': 'kimi.svg',
+                '小米·MiMo TokenPlan': 'Xiaomi-Logo.wine.svg',
+                '小米·MiMo': 'Xiaomi-Logo.wine.svg',
+                '阿里·百炼 CodingPlan': 'alibaba.svg',
+                '阿里·百炼': 'alibaba.svg'
+            };
+
+            // 名称匹配映射（recommendation名称 -> vendor名称）
+            const nameToVendorMap = {
+                '智谱AI': '智谱AI',
+                'MiniMax': 'MiniMax',
+                '讯飞·星火': '讯飞·星火',
+                '字节·方舟': '字节·方舟',
+                'Kimi': 'Kimi',
+                '小米·MiMo TokenPlan': '小米·MiMo',
+                '阿里·百炼 CodingPlan': '阿里·百炼'
+            };
+
+            container.innerHTML = recommendations.map(rec => {
+                const stars = '⭐️'.repeat(rec.rating);
+                const reasonsHtml = rec.reasons.map(reason => {
+                    return `<li>${formatRecommendationText(reason)}</li>`;
+                }).join('');
+
+                // Logo
+                const logoFile = logoMap[rec.name];
+                const logoHtml = logoFile
+                    ? `<img class="rec-logo" src="src/icons/extracted/${logoFile}" alt="${escapeHtml(rec.name)} logo">`
+                    : '';
+
+                // 根据 rec.name 在 allPlans 中查找第一个匹配的 vendor，获取链接
+                const matchedVendorName = nameToVendorMap[rec.name] || rec.name;
+                const matchedPlan = allPlans.find(p => p.vendor === matchedVendorName);
+                const nameHtml = matchedPlan
+                    ? `<a class="recommendation-name-link" href="${escapeHtml(matchedPlan.action)}" target="_blank" rel="noopener noreferrer">${logoHtml}<span class="recommendation-name">${escapeHtml(rec.name)}</span><svg class="link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></a>`
+                    : `<span class="recommendation-name-link">${logoHtml}<span class="recommendation-name">${escapeHtml(rec.name)}</span></span>`;
+
+                return `
+                    <div class="recommendation-card">
+                        <div class="recommendation-header">
+                            ${nameHtml}
+                            <span class="recommendation-rating">${stars}</span>
+                        </div>
+                        <ul class="recommendation-reasons">
+                            ${reasonsHtml}
+                        </ul>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 处理价格数据：补全缺失值
+        function processPrices(item, index) {
+            // 转换价格为数字
+            let firstMonthPrice = parseFloat(item.firstMonthPrice);
+            let monthlyPrice = parseFloat(item.monthlyPrice);
+            let quarterlyPrice = parseFloat(item.quarterlyPrice);
+            let yearlyPrice = parseFloat(item.yearlyPrice);
+
+            // 如果首月价格为 "-" 或 NaN，使用包月价格
+            if (isNaN(firstMonthPrice) || item.firstMonthPrice === '-') {
+                firstMonthPrice = monthlyPrice;
+            }
+
+            // 如果包季价格为 "-" 或 NaN，使用包月价格 * 3
+            if (isNaN(quarterlyPrice) || item.quarterlyPrice === '-') {
+                quarterlyPrice = monthlyPrice * 3;
+            }
+
+            // 如果包年价格为 "-" 或 NaN，使用包季价格 * 3
+            if (isNaN(yearlyPrice) || item.yearlyPrice === '-') {
+                yearlyPrice = quarterlyPrice * 3;
+            }
+
+            // 转换请求数：保留"未公开"和"无限制"，其他转换为数字
+            const preserveString = (value) => {
+                if (value === '未公开' || value === '无限制') {
+                    return value;
+                }
+                const num = parseInt(value);
+                return isNaN(num) ? 0 : num;
+            };
+
+            item.fiveHoursRequests = preserveString(item.fiveHoursRequests);
+            item.weeklyRequests = preserveString(item.weeklyRequests);
+            item.monthlyRequests = preserveString(item.monthlyRequests);
+
+            return {
+                ...item,
+                firstMonthPrice,
+                monthlyPrice,
+                quarterlyPrice,
+                yearlyPrice,
+                originalIndex: index // 保存原始索引，用于恢复顺序
+            };
+        }
+
+        // 加载套餐数据
+        async function loadData() {
+            try {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="16">
+                            <div class="loading">加载数据中</div>
+                        </td>
+                    </tr>
+                `;
+
+                const response = await fetch(PLANS_FILE_PATH, {
+                    cache: 'no-store'
+                });
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const plansData = await response.json();
+                allPlans = plansData.map((item, index) => processPrices(item, index));
+                filteredPlans = [...allPlans];
+
+                initFilters();
+                initPriceSliders();
+                initRequestSliders();
+                applyFilters();
+
+                // 数据加载后重新渲染推荐卡片（此时 allPlans 已有数据，可匹配链接）
+                if (appConfig.recommendations && appConfig.recommendations.length > 0) {
+                    renderRecommendations(appConfig.recommendations);
+                }
+
+                console.log(`成功加载 ${allPlans.length} 条套餐数据`);
+            } catch (error) {
+                console.error('加载数据失败:', error);
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="16">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">❌</div>
+                                <div class="empty-state-text">数据加载失败</div>
+                                <div class="empty-state-hint">请检查 JSON 文件路径: ${PLANS_FILE_PATH}</div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadConfig();
+            await loadData();
+        });
+
+    </script>
+    <script src="scripts/shared.js"></script>
+</body>
+</html>
