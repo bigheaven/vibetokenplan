@@ -5,7 +5,7 @@
     <meta name="baidu-site-verification" content="codeva-LiaxYnxu2a" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Coding Plan 对比工具 - 国内主流AI平台套餐对比</title>
-    <!-- <link rel="icon" href="/favicon.ico?v=260418" type="image/x-icon"> -->
+    <link rel="icon" href="/favicon.ico?v=260418" type="image/x-icon">
     <link rel="stylesheet" href="styles/shared.css">
     <style>
         .header .models {
@@ -1256,7 +1256,7 @@
 
         <!-- 页面导航 Tab -->
         <nav class="page-nav">
-            <a href="index.html" class="page-tab active">国内 Coding Plan</a>
+            <a href="index.html" class="page-tab active">国内 Coding Plan / Token Plan</a>
             <!-- 临时隐藏 -->
             <!-- <a href="tools.html" class="page-tab">AI 编程工具</a> -->
             <!-- <a href="relays.html" class="page-tab">API 中转站</a> -->
@@ -1661,10 +1661,10 @@
             <!-- 动态填充 -->
         </div>
 
-        <!--
+        <!-- 更新日志 -->
         <div class="updates-section" id="updatesSection">
+            <!-- 动态填充 -->
         </div>
--->
 
         <!-- 账号出售区域 -->
         <div class="account-sale-section" id="accountSaleSection">
@@ -3072,7 +3072,7 @@
                         subtitle: "火山引擎方舟、阿里云百炼、Kimi、智谱、MiniMax Coding Plan，全面对比",
                         models: "支持Doubao Seed 2.0，Qwen 3.5，MiniMax M2.5、GLM-5、Kimi-k2.5等模型",
                         github: {
-                            url: "https://github.com/bigheaven/vibetokenplan",
+                            url: "https://github.com",
                             text: "GitHub"
                         }
                     }
@@ -3098,7 +3098,7 @@
                 }
             }
 
-            // 渲染平台推荐（等 allPlans 数据加载完成后再调用，见 loadData 函数）
+            // 渲染平台推荐
             if (appConfig.recommendations && appConfig.recommendations.length > 0) {
                 renderRecommendations(appConfig.recommendations);
             }
@@ -3233,20 +3233,7 @@
                 '字节·方舟': 'bytedance.svg',
                 'Kimi': 'kimi.svg',
                 '小米·MiMo TokenPlan': 'Xiaomi-Logo.wine.svg',
-                '小米·MiMo': 'Xiaomi-Logo.wine.svg',
-                '阿里·百炼 CodingPlan': 'alibaba.svg',
-                '阿里·百炼': 'alibaba.svg'
-            };
-
-            // 名称匹配映射（recommendation名称 -> vendor名称）
-            const nameToVendorMap = {
-                '智谱AI': '智谱AI',
-                'MiniMax': 'MiniMax',
-                '讯飞·星火': '讯飞·星火',
-                '字节·方舟': '字节·方舟',
-                'Kimi': 'Kimi',
-                '小米·MiMo TokenPlan': '小米·MiMo',
-                '阿里·百炼 CodingPlan': '阿里·百炼'
+                '阿里·百炼 CodingPlan': 'alibaba.svg'
             };
 
             container.innerHTML = recommendations.map(rec => {
@@ -3262,11 +3249,11 @@
                     : '';
 
                 // 根据 rec.name 在 allPlans 中查找第一个匹配的 vendor，获取链接
-                const matchedVendorName = nameToVendorMap[rec.name] || rec.name;
-                const matchedPlan = allPlans.find(p => p.vendor === matchedVendorName);
-                const nameHtml = matchedPlan
-                    ? `<a class="recommendation-name-link" href="${escapeHtml(matchedPlan.action)}" target="_blank" rel="noopener noreferrer">${logoHtml}<span class="recommendation-name">${escapeHtml(rec.name)}</span><svg class="link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></a>`
-                    : `<span class="recommendation-name-link">${logoHtml}<span class="recommendation-name">${escapeHtml(rec.name)}</span></span>`;
+                const matchedPlan = allPlans.find(p => p.vendor === rec.name);
+                const actionUrl = matchedPlan ? (matchedPlan.action || '').trim() : '';
+                const nameHtml = matchedPlan && actionUrl
+                    ? `<a class="recommendation-name-link" href="${escapeHtml(actionUrl)}" target="_blank" rel="noopener noreferrer">${logoHtml}<span class="recommendation-name">${escapeHtml(rec.name)}</span><svg class="link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></a>`
+                    : `${logoHtml}<span class="recommendation-name">${escapeHtml(rec.name)}</span>`;
 
                 return `
                     <div class="recommendation-card">
