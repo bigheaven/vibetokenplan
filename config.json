@@ -67,6 +67,24 @@
         "独占Qwen-3.6-Plus模型，但无Max模型。+1",
         "只有Pro套餐了，且需要抢购。-1"
       ]
+    },
+    {
+      "name": "腾讯云",
+      "rating": 3,
+      "reasons": [
+        "集成 Hy3 preview，适合 Coding Agent、文档自动化及多步工具调用工作流。+1",
+        "Hy Token Plan28元起。+1",
+        "通用 Token Plan 支持GLM、Kimi、MiniMax等模型。+1"
+      ]
+    },
+    {
+      "name": "京东云",
+      "rating": 3,
+      "reasons": [
+        "集合最新主流国产编程模型DeepSeek-V3.2，GLM-5，MiniMax-M2.5M2.5，Kimi系列。+1",
+        "19.9元起。+1",
+        "购买Pro版送ClawLab。+1"
+      ]
     }
   ],
   "ratingGuide": "基准3颗星，价格优势劣势1分，模型优势或独占模型1分，其他优势1分",
